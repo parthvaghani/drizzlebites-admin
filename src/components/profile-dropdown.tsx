@@ -19,7 +19,6 @@ import { useLogout } from '@/hooks/use-auth'
 export function ProfileDropdown() {
   const user = useAuthStore((state) => state.auth.user) // ✅ Get user from store
   const logoutMutation = useLogout()
-
   const handleLogout = async () => {
     await logoutMutation.mutateAsync()
   }

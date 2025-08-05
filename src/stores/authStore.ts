@@ -1,5 +1,8 @@
 import Cookies from 'js-cookie'
 import { create } from 'zustand'
+import { QueryClient } from '@tanstack/react-query'
+import api from '@/lib/api'
+import { toast } from 'sonner';
 
 const ACCESS_TOKEN = 'thisisjustarandomstring'
 
@@ -15,6 +18,13 @@ interface AuthUser {
   }
 }
 
+const getCurrentUser = async () => {
+  const response = await api.get('/users/me')
+  return response.data
+}
+
+const queryClient = new QueryClient()
+
 interface AuthState {
   auth: {
     user: AuthUser | null
@@ -24,6 +34,9 @@ interface AuthState {
     resetAccessToken: () => void
     reset: () => void
     clearAuth: () => void
+    isLoading: boolean
+    error: string | null
+    fetchUser: () => Promise<void>
   }
 }
 
@@ -65,6 +78,34 @@ export const useAuthStore = create<AuthState>()((set) => {
             auth: { ...state.auth, user: null, accessToken: '' },
           }
         }),
+      isLoading: false,
+      error: null,
+      fetchUser: async () => {
+        set((state) => ({
+          ...state,
+          auth: { ...state.auth, isLoading: true, error: null }
+        }))
+        try {
+          const userData = await queryClient.fetchQuery({
+            queryKey: ['user'],
+            queryFn: getCurrentUser
+          })
+          set((state) => ({
+            ...state,
+            auth: { ...state.auth, user: userData, isLoading: false }
+          }))
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : String(error));
+          set((state) => ({
+            ...state,
+            auth: {
+              ...state.auth,
+              error: error instanceof Error ? error.message : 'Failed to fetch user',
+              isLoading: false
+            }
+          }))
+        }
+      },
     },
   }
 })
