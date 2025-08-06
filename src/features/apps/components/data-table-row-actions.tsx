@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { SquarePen, Trash, Eye } from 'lucide-react'
 import { toast } from 'sonner'
+import { useProductCategories } from '@/hooks/use-categories'
 import { useUpdateProduct, useDeleteProduct } from '@/hooks/use-products'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,6 +14,13 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 
 interface Variant {
@@ -61,6 +69,7 @@ export function DataTableRowActions({ row }: { row: { original: Product } }) {
     benefits: product.benefits || [],
     variants: product.variants || { gm: [], kg: [] },
   })
+  const { data: categories = [] } = useProductCategories()
 
   const [newImage, setNewImage] = useState('')
   const [newIngredient, setNewIngredient] = useState('')
@@ -157,7 +166,16 @@ export function DataTableRowActions({ row }: { row: { original: Product } }) {
         variant='ghost'
         size='icon'
         onClick={() => {
-          setFormData(product)
+          setFormData({
+            ...product,
+            category: product.category,
+            images: product.images || [],
+            ingredients: product.ingredients || [],
+            benefits: product.benefits || [],
+            variants: product.variants || { gm: [], kg: [] },
+            isPremium: product.isPremium ?? false,
+            isPopular: product.isPopular ?? false,
+          })
           setEditOpen(true)
         }}
         className='h-8 w-8'
@@ -191,21 +209,30 @@ export function DataTableRowActions({ row }: { row: { original: Product } }) {
           </DialogHeader>
           <div className='space-y-4'>
             {/* Category */}
-            <div>
-              <Label>Category</Label>
-              <Input
-                className='mt-2'
+            <div className='grid gap-2'>
+              <Label htmlFor='category'>Category</Label>
+              <Select
                 value={
                   typeof formData.category === 'string'
                     ? formData.category
-                    : formData.category?.name || ''
+                    : formData.category?.id || formData.category?._id || ''
                 }
-                onChange={(e) =>
-                  setFormData({ ...formData, category: e.target.value })
+                onValueChange={(value) =>
+                  setFormData({ ...formData, category: value })
                 }
-              />
+              >
+                <SelectTrigger id='category' className='w-full'>
+                  <SelectValue placeholder='Select a category' />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-
             {/* Name */}
             <div>
               <Label>Name</Label>
@@ -569,101 +596,122 @@ export function DataTableRowActions({ row }: { row: { original: Product } }) {
       {/*detials dailog*/}
 
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-  <DialogContent className="max-h-[90vh] overflow-y-auto">
-    <DialogHeader>
-      <DialogTitle className="text-2xl font-bold">{product.name}</DialogTitle>
-      <p className="text-gray-600 text-sm mt-1">{product.description || 'No description available'}</p>
-      <div className="flex gap-2 mt-2">
-        {product.isPremium && <span className="px-2 py-0.5 text-xs rounded bg-yellow-200 text-yellow-800">Premium</span>}
-        {product.isPopular && <span className="px-2 py-0.5 text-xs rounded bg-green-200 text-green-800">Popular</span>}
-      </div>
-    </DialogHeader>
+        <DialogContent className='max-h-[90vh] overflow-y-auto'>
+          <DialogHeader>
+            <DialogTitle className='text-2xl font-bold'>
+              {product.name}
+            </DialogTitle>
+            <p className='mt-1 text-sm text-gray-600'>
+              {product.description || 'No description available'}
+            </p>
+            <div className='mt-2 flex gap-2'>
+              {product.isPremium && (
+                <span className='rounded bg-yellow-200 px-2 py-0.5 text-xs text-yellow-800'>
+                  Premium
+                </span>
+              )}
+              {product.isPopular && (
+                <span className='rounded bg-green-200 px-2 py-0.5 text-xs text-green-800'>
+                  Popular
+                </span>
+              )}
+            </div>
+          </DialogHeader>
 
-    <div className="space-y-6 mt-4">
-      {/* Category */}
-      <div>
-        <h3 className="font-medium text-gray-800">Category</h3>
-        <p className="border rounded-md p-2 text-sm mt-1">
-          {typeof product.category === 'string' ? product.category : product.category?.name}
-        </p>
-      </div>
+          <div className='mt-4 space-y-6'>
+            {/* Category */}
+            <div>
+              <h3 className='font-medium text-gray-800'>Category</h3>
+              <p className='mt-1 rounded-md border p-2 text-sm'>
+                {typeof product.category === 'string'
+                  ? product.category
+                  : product.category?.name}
+              </p>
+            </div>
 
-      {/* Images */}
-      {product.images && product.images.length > 0 && (
-        <div>
-          <h3 className="font-medium text-gray-800 mb-2">Images</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {product.images.map((img, i) => (
-              <img
-                key={i}
-                src={img}
-                alt={`Image ${i + 1}`}
-                className="w-full h-28 object-cover rounded border"
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Ingredients */}
-      {product.ingredients && product.ingredients.length > 0 && (
-        <div>
-          <h3 className="font-medium text-gray-800 mb-1">Ingredients</h3>
-          <div className="flex flex-wrap gap-2">
-            {product.ingredients.map((ing, i) => (
-              <span key={i} className="bg-blue-50 text-blue-700 px-3 py-1 text-xs rounded-full border border-blue-200">
-                {ing}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Benefits */}
-      {product.benefits && product.benefits.length > 0 && (
-        <div>
-          <h3 className="font-medium text-gray-800 mb-1">Benefits</h3>
-          <div className="flex flex-wrap gap-2">
-            {product.benefits.map((ben, i) => (
-              <span key={i} className="bg-green-50 text-green-700 px-3 py-1 text-xs rounded-full border border-green-200">
-                {ben}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Variants */}
-      {product.variants && (
-        <div>
-          <h3 className="font-medium text-gray-800 mb-1">Variants</h3>
-          {(['gm', 'kg'] as const).map((type) => (
-            product.variants?.[type]?.length ? (
-              <div key={type} className="mt-2">
-                <p className="font-semibold capitalize mb-1">{type}:</p>
-                <div className="space-y-2">
-                  {product.variants[type]?.map((v, i) => (
-                    <div
+            {/* Images */}
+            {product.images && product.images.length > 0 && (
+              <div>
+                <h3 className='mb-2 font-medium text-gray-800'>Images</h3>
+                <div className='grid grid-cols-2 gap-3 sm:grid-cols-3'>
+                  {product.images.map((img, i) => (
+                    <img
                       key={i}
-                      className="flex justify-between items-center border rounded p-2 text-sm"
-                    >
-                      <span>{v.weight}</span>
-                      <span className="font-semibold">₹{v.price}</span>
-                      {v.discount ? <span className="text-red-500 text-xs">-{v.discount}%</span> : null}
-                    </div>
+                      src={img}
+                      alt={`Image ${i + 1}`}
+                      className='h-28 w-full rounded border object-cover'
+                    />
                   ))}
                 </div>
               </div>
-            ) : null
-          ))}
-        </div>
-      )}
-    </div>
-  </DialogContent>
-</Dialog>
+            )}
 
+            {/* Ingredients */}
+            {product.ingredients && product.ingredients.length > 0 && (
+              <div>
+                <h3 className='mb-1 font-medium text-gray-800'>Ingredients</h3>
+                <div className='flex flex-wrap gap-2'>
+                  {product.ingredients.map((ing, i) => (
+                    <span
+                      key={i}
+                      className='rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs text-blue-700'
+                    >
+                      {ing}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
+            {/* Benefits */}
+            {product.benefits && product.benefits.length > 0 && (
+              <div>
+                <h3 className='mb-1 font-medium text-gray-800'>Benefits</h3>
+                <div className='flex flex-wrap gap-2'>
+                  {product.benefits.map((ben, i) => (
+                    <span
+                      key={i}
+                      className='rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs text-green-700'
+                    >
+                      {ben}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
+            {/* Variants */}
+            {product.variants && (
+              <div>
+                <h3 className='mb-1 font-medium text-gray-800'>Variants</h3>
+                {(['gm', 'kg'] as const).map((type) =>
+                  product.variants?.[type]?.length ? (
+                    <div key={type} className='mt-2'>
+                      <p className='mb-1 font-semibold capitalize'>{type}:</p>
+                      <div className='space-y-2'>
+                        {product.variants[type]?.map((v, i) => (
+                          <div
+                            key={i}
+                            className='flex items-center justify-between rounded border p-2 text-sm'
+                          >
+                            <span>{v.weight}</span>
+                            <span className='font-semibold'>₹{v.price}</span>
+                            {v.discount ? (
+                              <span className='text-xs text-red-500'>
+                                -{v.discount}%
+                              </span>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

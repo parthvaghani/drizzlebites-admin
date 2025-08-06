@@ -9,7 +9,7 @@ import { DataTable } from './components/data-table'
 import { ProductsPrimaryButtons } from './components/products-primary-buttons'
 import TasksProvider from './context/tasks-context'
 import type { Product } from './data/schema'
-import { ColumnDef } from '@tanstack/react-table'
+// import { ColumnDef } from '@tanstack/react-table'
 
 
 export default function Product() {
@@ -43,9 +43,52 @@ export default function Product() {
     <p className='text-red-500'>Error: {(error as Error).message}</p>
   ) : (
     <DataTable
-      data={data as unknown as Product[]}
-      columns={columns as unknown as ColumnDef<Product, unknown>[]}
-    />
+    data={(() => {
+      const rawData: Product[] = Array.isArray(data) ?  (data as Product[]) : [];
+      return rawData.map((product) => ({
+        _id: product._id, // or String(product._id)
+        id: product._id,  // or String(product._id)
+        category:
+          typeof product.category === 'object' && product.category !== null
+            ? product.category
+            : String(product.category || 'Unknown Category'),
+        name: product.name || 'Unnamed',
+        description: product.description || '',
+        isPremium: Boolean(product.isPremium ?? false),
+        isPopular: Boolean(product.isPopular ?? false),
+        variants: product.variants || {},
+        images: Array.isArray(product.images) ? product.images : [],
+        ingredients: Array.isArray(product.ingredients) ? product.ingredients : [],
+        benefits: Array.isArray(product.benefits) ? product.benefits : [],
+      }));
+    })() as {
+      _id: string;
+      id: string;
+      category: string;
+      name: string;
+      description?: string;
+      isPremium?: boolean;
+      isPopular?: boolean;
+      variants?: Record<string, unknown>;
+      images?: string[];
+      ingredients?: string[];
+      benefits?: string[];
+    }[]
+    }
+    columns={columns as import('@tanstack/react-table').ColumnDef<{
+      _id: string;
+      id: string;
+      category: string;
+      name: string;
+      description?: string;
+      isPremium?: boolean;
+      isPopular?: boolean;
+      variants?: Record<string, unknown>;
+      images?: string[];
+      ingredients?: string[];
+      benefits?: string[];
+    }, unknown>[]}
+  />
   )}
 </div>
       </Main>

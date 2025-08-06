@@ -1,8 +1,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
 
-interface ProductCategory {
+export interface ProductCategory {
   id: string
+  _id: string
   name: string
   description?: string
   pricingEnabled?: boolean
@@ -14,7 +15,7 @@ interface ProductCategory {
 // Fetch all categories
 const getProductCategoriesApi = async (): Promise<ProductCategory[]> => {
   const response = await api.get('/categories/product-category')
-  return response.data
+  return response.data.data
 }
 const searchProductCategoriesApi = async (search: string): Promise<ProductCategory[]> => {
   const response = await api.get('/categories/product-category', {

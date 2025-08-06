@@ -45,8 +45,8 @@ export default function Tasks() {
   ) : (
     <DataTable
       data={(() => {
-        const rawData = data ?? [];
-        
+        const rawData = data || [];
+        // console.log('rawData :>> ', data);
         if (!Array.isArray(rawData)) {
           // console.warn('Data is not an array:', rawData);
           return [];
@@ -66,7 +66,7 @@ export default function Tasks() {
           description: category.description || '',
           pricingEnabled: category.pricingEnabled ?? false,
         }));
-      })()}
+      })()}             
       columns={columns}
     />
   )}

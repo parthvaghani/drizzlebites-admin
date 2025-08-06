@@ -13,8 +13,8 @@ interface Variants {
 }
 
 interface Product {
-  _id?: string;
   id?: string;
+  _id?: string;
   category?: { _id?: string; id?: string; name?: string } | string;
   name?: string;
   description?: string;
@@ -31,7 +31,7 @@ interface Product {
 //  Fetch all products
 const getProductsApi = async (): Promise<Product[]> => {
   const response = await api.get('/products/product')
-  return response.data
+  return response.data.data
 }
 
 //  Get product by ID
@@ -82,7 +82,7 @@ const updateProductApi = async (payload: {
   }
   
   const response = await api.put(`/products/product/${payload.id}`, updatedPayload)
-  return response.data
+  return response.data.data
 }
 
 //  Delete product

@@ -157,7 +157,7 @@ export function DataTableRowActions({ row }: { row: { original: Category } }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
+   {/* Details Dialog */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
   <DialogContent className="max-w-md rounded-lg shadow-lg border">
     <DialogHeader>
@@ -181,7 +181,7 @@ export function DataTableRowActions({ row }: { row: { original: Category } }) {
 
       {/* Pricing Enabled Section */}
       <div>
-        <p className="text-xs uppercase text-gray-400 tracking-wider">Pricing Status</p>
+        <p className="text-xs uppercase text-gray-400 tracking-wider mb-2">Pricing Status</p>
         <span
           className={`inline-block px-3 py-1 text-xs font-medium rounded-full mt-1 ${
             category.pricingEnabled

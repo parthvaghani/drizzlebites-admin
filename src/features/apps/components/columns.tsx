@@ -12,7 +12,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 // Product Interface (based on your schema)
 export interface Product {
-  id: string
+  _id: string
+  id: string;
   category: { id: string; name: string }
   name: string
   description?: string
@@ -89,7 +90,6 @@ export const columns: ColumnDef<Product>[] = [
       const description = row.getValue('description') as string
       const maxLength = 25 // reduced length to prevent scroll
       const truncated = description?.length > maxLength ? `${description.slice(0, maxLength)}...` : description || '—'
-  
       return (
         <TooltipProvider>
           <Tooltip>
