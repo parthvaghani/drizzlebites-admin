@@ -91,7 +91,7 @@ export const columns: ColumnDef<Category>[] = [
       const description = row.getValue('description') as string
       const maxLength = 25 // reduced length to prevent scroll
       const truncated = description?.length > maxLength ? `${description.slice(0, maxLength)}...` : description || '—'
-  
+
       return (
         <TooltipProvider>
           <Tooltip>
@@ -137,7 +137,7 @@ export const columns: ColumnDef<Category>[] = [
     header: ({column}) => ( <DataTableColumnHeader column={column} title='Actions' />
   ),
     cell: ({ row }) => <DataTableRowActions row={row} />,
-    enableSorting: false, 
+    enableSorting: false,
     enableHiding: false,
   }
 ]

@@ -11,9 +11,9 @@ import { TasksPrimaryButtons } from './components/tasks-primary-buttons'
 import TasksProvider from './context/tasks-context'
 
 
-export default function Tasks() {
+export default function Categories() {
   const { data, isLoading, isError, error } = useProductCategories()
-  
+
 
 
   return (
@@ -51,7 +51,7 @@ export default function Tasks() {
           // console.warn('Data is not an array:', rawData);
           return [];
         }
-        
+
         return rawData.map((category: {
           _id?: string;
           id?: string;
@@ -66,7 +66,7 @@ export default function Tasks() {
           description: category.description || '',
           pricingEnabled: category.pricingEnabled ?? false,
         }));
-      })()}             
+      })()}
       columns={columns}
     />
   )}

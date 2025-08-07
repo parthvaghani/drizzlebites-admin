@@ -12,7 +12,7 @@ import type { Product } from './data/schema'
 // import { ColumnDef } from '@tanstack/react-table'
 
 
-export default function Product() {
+export default function Products() {
   const { data, isLoading, isError, error } = useProducts()
   return (
     <TasksProvider>
@@ -33,7 +33,7 @@ export default function Product() {
             </p>
           </div>
           <ProductsPrimaryButtons />
-          
+
         </div>
 
         <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-y-0 lg:space-x-12'>

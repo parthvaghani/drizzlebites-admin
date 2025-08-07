@@ -57,12 +57,12 @@ export const sidebarData: SidebarData = {
         },
         {
           title: 'Categories',
-          url: '/tasks',
+          url: '/categories',
           icon: IconChecklist,
         },
         {
           title: 'Products',
-          url: '/apps',
+          url: '/products',
           icon: IconPackages,
         },
         {
