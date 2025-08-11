@@ -78,7 +78,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    mode: 'onBlur', // ✅ Show errors on blur
+    mode: 'onBlur', 
     defaultValues: {
       email: '',
       phoneNumber: '',

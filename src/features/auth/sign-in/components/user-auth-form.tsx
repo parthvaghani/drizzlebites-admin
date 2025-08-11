@@ -34,7 +34,7 @@ const formSchema = z.object({
         value.length >= 3 && /^[a-zA-Z0-9_ ]+$/.test(value) // ✅ allows spaces in username
       return isEmail || isUsername
     }, 'Please enter a valid email or username (minimum 3 characters)'),
-    
+
   password: z
     .string()
     .min(1, 'Please enter your password')
@@ -53,7 +53,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
     },
   })
 
- 
+
   async function onSubmit(data: z.infer<typeof formSchema>) {
     try {
       const finalData = { ...data } // Removed role: 'user' as const
@@ -66,7 +66,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
     } catch (error) {
       handleServerError(error)
     }
-  } 
+  }
   return (
     <Form {...form}>
       <form
