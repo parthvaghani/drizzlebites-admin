@@ -9,7 +9,6 @@ import {
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
@@ -24,14 +23,32 @@ import {
 import { DataTablePagination } from '../components/data-table-pagination'
 import { DataTableToolbar } from '../components/data-table-toolbar'
 
+interface PaginationState {
+  page: number
+  limit: number
+  total?: number
+}
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  showToolbar?: boolean
+  showPagination?: boolean
+  pagination?: PaginationState
+  onPaginationChange?: (next: PaginationState) => void
+  search?: string
+  onSearchChange?: (value: string) => void
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  showToolbar = true,
+  showPagination = true,
+  pagination,
+  onPaginationChange,
+  search,
+  onSearchChange,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -40,7 +57,7 @@ export function DataTable<TData, TValue>({
     []
   )
   const [sorting, setSorting] = React.useState<SortingState>([])
-  
+
   const table = useReactTable({
     data,
     columns,
@@ -57,7 +74,6 @@ export function DataTable<TData, TValue>({
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
@@ -65,7 +81,13 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className='space-y-4'>
-      <DataTableToolbar table={table} />
+      {showToolbar ? (
+        <DataTableToolbar
+          table={table}
+          search={search ?? ''}
+          onSearchChange={(val) => onSearchChange?.(val)}
+        />
+      ) : null}
       <div className='overflow-hidden rounded-md border'>
         <Table>
           <TableHeader>
@@ -116,7 +138,9 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      <DataTablePagination table={table} />
+      {showPagination && pagination && onPaginationChange ? (
+        <DataTablePagination table={table} pagination={pagination} onChange={onPaginationChange} />
+      ) : null}
     </div>
   )
 }

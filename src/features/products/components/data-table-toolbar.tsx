@@ -1,44 +1,53 @@
-import { Cross2Icon } from '@radix-ui/react-icons'
-import { Table } from '@tanstack/react-table'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { DataTableViewOptions } from '../components/data-table-view-options'
-import { useState, useEffect } from 'react'
+import { Cross2Icon } from '@radix-ui/react-icons';
+import { Table } from '@tanstack/react-table';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { DataTableViewOptions } from '../components/data-table-view-options';
+import { useEffect, useState } from 'react';
 
 interface DataTableToolbarProps<TData> {
-  table: Table<TData>
+  table: Table<TData>;
+  search: string;
+  onSearchChange: (value: string) => void;
 }
 
-export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
-  const [search, setSearch] = useState('')
-  const isFiltered = !!table.getState().globalFilter
+export function DataTableToolbar<TData>({ table, search, onSearchChange }: DataTableToolbarProps<TData>) {
+  // Local state for debounce UX
+  const [localSearch, setLocalSearch] = useState(search);
 
-  // ✅ Debounce search (500ms)
+  useEffect(() => {
+    setLocalSearch(search);
+  }, [search]);
+
+  // Debounce server-side search
   useEffect(() => {
     const delay = setTimeout(() => {
-      table.setGlobalFilter(search) // ✅ apply search globally
-    }, 500)
-    return () => clearTimeout(delay)
-  }, [search, table])
+      // Only trigger change if value actually differs to avoid unintended resets
+      if (localSearch !== search) {
+        onSearchChange(localSearch);
+      }
+    }, 500);
+    return () => clearTimeout(delay);
+  }, [localSearch, search, onSearchChange]);
+
+  const isFiltered = !!localSearch;
 
   return (
     <div className='flex items-center justify-between'>
       <div className='flex flex-1 flex-col-reverse items-start gap-y-2 sm:flex-row sm:items-center sm:space-x-2'>
-        {/* 🔍 Global Search Input */}
         <Input
           placeholder='Search...'
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={localSearch}
+          onChange={(e) => setLocalSearch(e.target.value)}
           className='h-8 w-[200px] lg:w-[300px]'
         />
 
-        {/* 🔄 Reset Button */}
         {isFiltered && (
           <Button
             variant='ghost'
             onClick={() => {
-              setSearch('')
-              table.setGlobalFilter('') // ✅ Clear filter
+              setLocalSearch('');
+              onSearchChange('');
             }}
             className='h-8 px-2 lg:px-3'
           >
@@ -48,8 +57,7 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
         )}
       </div>
 
-      {/* 👁️ View Options */}
       <DataTableViewOptions table={table} />
     </div>
-  )
+  );
 }

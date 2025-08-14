@@ -287,12 +287,12 @@ export function ProductsPrimaryButtons() {
                   {productData.ingredients.map((ing, i) => (
                     <span
                       key={i}
-                      className='flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-sm'
+                      className='flex items-center gap-1 rounded bg-muted/50 px-2 py-1 text-sm'
                     >
                       {ing}
                       <button
                         onClick={() => handleRemoveIngredient(i)}
-                        className='text-xs text-red-500 hover:text-red-700'
+                        className='text-sm font-bold text-red-500 hover:text-red-700'
                       >
                         ✕
                       </button>
@@ -318,12 +318,12 @@ export function ProductsPrimaryButtons() {
                   {productData.benefits.map((ben, i) => (
                     <span
                       key={i}
-                      className='flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-sm'
+                      className='flex items-center gap-1 rounded bg-muted/50 px-2 py-1 text-sm'
                     >
                       {ben}
                       <button
                         onClick={() => handleRemoveBenefit(i)}
-                        className='text-xs text-red-500 hover:text-red-700'
+                        className='text-sm font-bold text-red-500 hover:text-red-700'
                       >
                         ✕
                       </button>
@@ -375,15 +375,26 @@ export function ProductsPrimaryButtons() {
                         {productData.variants[type].map((v, i) => (
                           <div
                             key={i}
-                            className='mt-1 flex items-center justify-between rounded bg-gray-100 p-2'
+                            className='mt-1 flex items-center justify-between rounded border bg-muted/50 p-2'
                           >
-                            <span>
-                              {v.weight}
-                              {type} - ₹{v.price} (Discount: {v.discount}%)
-                            </span>
+                            <div className='flex items-center gap-3 text-sm'>
+                              <span className='font-medium'>
+                                {v.weight}
+                                {type}
+                              </span>
+                              {v.discount ? (
+                                <>
+                                  <span className='line-through text-muted-foreground'>₹{v.price}</span>
+                                  <span className='font-semibold'>₹{v.price - v.discount}</span>
+                                  <span className='rounded bg-red-600 px-2 pt-0.5 text-xs text-white'>₹{v.discount} OFF</span>
+                                </>
+                              ) : (
+                                <span className='font-semibold'>₹{v.price}</span>
+                              )}
+                            </div>
                             <button
                               onClick={() => handleRemoveVariant(type, i)}
-                              className='text-xs text-red-500'
+                              className='text-sm font-bold text-red-500'
                             >
                               ✕
                             </button>

@@ -12,16 +12,18 @@ import { useWhatsappLeadsList } from '@/hooks/use-whatsapp-leads'
 export default function WhatsappLeads() {
   const [status, setStatus] = useState<'all' | 'new' | 'contacted' | 'closed' | 'spam'>('all')
   const statusParam = useMemo(() => (status === 'all' ? undefined : status), [status])
-  const [search, setSearch] = useState<string | null>(null)
+  const [search, setSearch] = useState<string>('')
+  const [page, setPage] = useState<number>(1)
+  const [limit, setLimit] = useState<number>(10)
   const [intent, setIntent] = useState<'all' | 'true' | 'false'>('all')
   const [sent, setSent] = useState<'all' | 'true' | 'false'>('all')
   const intentParam = useMemo(() => (intent === 'all' ? undefined : intent === 'true'), [intent])
   const sentParam = useMemo(() => (sent === 'all' ? undefined : sent === 'true'), [sent])
 
   const { data, isLoading, isError, error, isFetching } = useWhatsappLeadsList({
-    page: 1,
-    limit: 100,
-    search,
+    page,
+    limit,
+    search: search || undefined,
     status: statusParam,
     whatsappIntent: intentParam,
     whatsappSent: sentParam,
@@ -44,7 +46,7 @@ export default function WhatsappLeads() {
           </div>
           <div className='flex items-center gap-3'>
             <div className='flex items-center gap-2'>
-              <Select value={status} onValueChange={(val: 'all' | 'new' | 'contacted' | 'closed' | 'spam') => setStatus(val)}>
+              <Select value={status} onValueChange={(val: 'all' | 'new' | 'contacted' | 'closed' | 'spam') => { setStatus(val); setPage(1) }}>
                 <SelectTrigger id='status-filter' className='h-8 w-[160px]'>
                   <SelectValue placeholder='All' />
                 </SelectTrigger>
@@ -58,7 +60,7 @@ export default function WhatsappLeads() {
               </Select>
             </div>
             <div className='flex items-center gap-2'>
-              <Select value={intent} onValueChange={(val: 'all' | 'true' | 'false') => setIntent(val)}>
+              <Select value={intent} onValueChange={(val: 'all' | 'true' | 'false') => { setIntent(val); setPage(1) }}>
                 <SelectTrigger id='intent-filter' className='h-8 w-[140px]'>
                   <SelectValue placeholder='All' />
                 </SelectTrigger>
@@ -70,7 +72,7 @@ export default function WhatsappLeads() {
               </Select>
             </div>
             <div className='flex items-center gap-2'>
-              <Select value={sent} onValueChange={(val: 'all' | 'true' | 'false') => setSent(val)}>
+              <Select value={sent} onValueChange={(val: 'all' | 'true' | 'false') => { setSent(val); setPage(1) }}>
                 <SelectTrigger id='sent-filter' className='h-8 w-[140px]'>
                   <SelectValue placeholder='All' />
                 </SelectTrigger>
@@ -93,7 +95,16 @@ export default function WhatsappLeads() {
             <DataTable
               data={(data?.results ?? []) as import('@/hooks/use-whatsapp-leads').WhatsappLead[]}
               columns={columns as import('@tanstack/react-table').ColumnDef<import('@/hooks/use-whatsapp-leads').WhatsappLead, unknown>[]}
-              onSearchChange={(val) => setSearch(val || null)}
+              search={search}
+              onSearchChange={(val) => {
+                setSearch(val)
+                setPage(1)
+              }}
+              pagination={{ page, limit, total: data?.total ?? (data?.results?.length ?? 0) }}
+              onPaginationChange={({ page: nextPage, limit: nextLimit }) => {
+                setPage(nextPage)
+                setLimit(nextLimit)
+              }}
             />
           )}
         </div>

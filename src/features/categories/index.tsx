@@ -16,7 +16,11 @@ import { Switch } from '@/components/ui/switch';
 
 export default function Categories() {
   const [pricingEnabled, setPricingEnabled] = useState<boolean | undefined>(undefined);
-  const { data, isLoading, isError, error } = useProductCategoriesList({ page: 1, limit: 10, search: '', pricingEnabled });
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(10);
+  const [search, setSearch] = useState<string>('');
+
+  const { data, isLoading, isError, error, isFetching } = useProductCategoriesList({ page, limit, search, pricingEnabled });
 
 
 
@@ -55,7 +59,7 @@ export default function Categories() {
         </div>
 
         <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-y-0 lg:space-x-12'>
-          {isLoading ? (
+          {isLoading || isFetching ? (
             <p>Loading categories...</p>
           ) : isError ? (
             <p className='text-red-500'>Error: {(error as Error).message}</p>
@@ -80,6 +84,16 @@ export default function Categories() {
                 }));
               })()}
               columns={columns}
+              search={search}
+              onSearchChange={(val) => {
+                setSearch(val);
+                setPage(1);
+              }}
+              pagination={{ page, limit, total: data?.total ?? undefined }}
+              onPaginationChange={({ page: nextPage, limit: nextLimit }) => {
+                setPage(nextPage);
+                setLimit(nextLimit);
+              }}
             />
           )}
         </div>

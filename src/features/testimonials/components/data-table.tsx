@@ -25,9 +25,11 @@ import { DataTableToolbar } from '@/features/categories/components/data-table-to
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  search?: string
+  onSearchChange?: (value: string) => void
 }
 
-export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data, search, onSearchChange }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -55,7 +57,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
 
   return (
     <div className='space-y-4'>
-      <DataTableToolbar table={table} />
+      <DataTableToolbar table={table} search={search ?? ''} onSearchChange={onSearchChange ?? (() => {})} />
       <div className='overflow-hidden rounded-md border'>
         <Table>
           <TableHeader>

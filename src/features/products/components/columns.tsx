@@ -286,7 +286,6 @@ export const columns: ColumnDef<Product>[] = [
                 </p>
                 {gmVariants.map((v, i) => {
                   const discountPercent = Math.max(0, Math.min(100, v.discount || 0));
-                  const discountedPrice = Math.round(v.price * (1 - discountPercent / 100));
                   return (
                     <DropdownMenuItem
                       key={`gm-${i}`}
@@ -295,13 +294,15 @@ export const columns: ColumnDef<Product>[] = [
                       <span className="font-medium">{formatWeight(v.weight, "g")}</span>
                       <span className="ml-auto flex items-center gap-2">
                         {discountPercent > 0 && (
-                          <del className="text-muted-foreground">
+                          <span className="line-through text-muted-red">
                             {formatINR(v.price)}
-                          </del>
+                          </span>
                         )}
-                        <span className="font-semibold">{formatINR(discountedPrice)}</span>
+                        <span className="font-semibold">{formatINR(v.price - v.discount)}</span>
                         {discountPercent > 0 && (
-                          <span className="text-xs rounded-full px-2 py-0.5 bg-red-100 text-red-600">-{discountPercent}%</span>
+                          <span className="text-xs rounded-full px-2 py-0.5 bg-red-600 text-white">
+                            - {formatINR(v.discount)} OFF
+                          </span>
                         )}
                       </span>
                     </DropdownMenuItem>
@@ -318,7 +319,6 @@ export const columns: ColumnDef<Product>[] = [
                 </p>
                 {kgVariants.map((v, i) => {
                   const discountPercent = Math.max(0, Math.min(100, v.discount || 0));
-                  const discountedPrice = Math.round(v.price * (1 - discountPercent / 100));
                   return (
                     <DropdownMenuItem
                       key={`kg-${i}`}
@@ -327,13 +327,15 @@ export const columns: ColumnDef<Product>[] = [
                       <span className="font-medium">{formatWeight(v.weight, "kg")}</span>
                       <span className="ml-auto flex items-center gap-2">
                         {discountPercent > 0 && (
-                          <del className="text-muted-foreground">
+                          <span className="line-through text-muted-red hover:text-l">
                             {formatINR(v.price)}
-                          </del>
+                          </span>
                         )}
-                        <span className="font-semibold">{formatINR(discountedPrice)}</span>
+                        <span className="font-semibold">{formatINR(v.price - v.discount)}</span>
                         {discountPercent > 0 && (
-                          <span className="text-xs rounded-full px-2 py-0.5 bg-red-100 text-red-600">-{discountPercent}%</span>
+                          <span className="text-xs rounded-full px-2 py-0.5 bg-red-600 text-white">
+                            - {formatINR(v.discount)} OFF
+                          </span>
                         )}
                       </span>
                     </DropdownMenuItem>

@@ -29,7 +29,7 @@ export interface WhatsappLead {
 export interface GetWhatsappLeadsParams {
   page?: number
   limit?: number
-  search?: string | null
+  search?: string
   status?: string
   whatsappIntent?: boolean
   whatsappSent?: boolean
@@ -74,7 +74,7 @@ export function useWhatsappLeadsList(params: GetWhatsappLeadsParams) {
   const {
     page = 1,
     limit = 100,
-    search = null,
+    search = '',
     status,
     whatsappIntent,
     whatsappSent,

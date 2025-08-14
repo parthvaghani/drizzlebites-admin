@@ -1,4 +1,4 @@
-import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
 
 export interface SuggestedProduct {
@@ -31,15 +31,23 @@ const getSuggestedProductsApi = async (
 ): Promise<PaginatedSuggestedProductsResponse> => {
   const { page, limit, search, status } = params
   const response = await api.get('/products/suggested', {
-    params: { page, limit, search, status },
+    params: {
+      // primary expected params
+      page,
+      limit,
+      search,
+      status,
+    },
   })
 
   const payload = response?.data?.data ?? response?.data ?? {}
-  const results: SuggestedProduct[] = payload?.results ?? payload ?? []
+  const results: SuggestedProduct[] = Array.isArray(payload)
+    ? (payload as SuggestedProduct[])
+    : (payload?.results ?? payload?.data ?? payload?.items ?? [])
   const total: number | undefined =
     payload?.total ?? payload?.count ?? payload?.totalResults ?? undefined
-  const currentPage: number | undefined = payload?.page ?? payload?.currentPage
-  const currentLimit: number | undefined = payload?.limit ?? payload?.pageSize
+  const currentPage: number | undefined = payload?.page ?? payload?.currentPage ?? payload?.pageNo
+  const currentLimit: number | undefined = payload?.limit ?? payload?.pageSize ?? payload?.perPage
 
   return {
     results,
@@ -71,9 +79,8 @@ export function useSuggestedProductsList(params: GetSuggestedProductsParams) {
   return useQuery({
     queryKey: ['suggested-products', { page, limit, search, status }],
     queryFn: () => getSuggestedProductsApi({ page, limit, search, status }),
-    placeholderData: keepPreviousData,
-    staleTime: 1000 * 30,
-    retry: 3,
+    // staleTime: 1000 * 30,
+    // retry: 3,
     refetchOnWindowFocus: false,
   })
 }

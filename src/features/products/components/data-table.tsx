@@ -8,7 +8,6 @@ import {
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
@@ -25,21 +24,36 @@ import { DataTableToolbar } from '../components/data-table-toolbar'
 import { Product } from '../data/schema'
 import type { ColumnDef } from '@tanstack/react-table'
 
+interface PaginationState {
+  page: number
+  limit: number
+  total?: number
+}
+
 interface DataTableProps {
   columns: ColumnDef<Product, unknown>[]
   data: Product[]
   showToolbar?: boolean
   showPagination?: boolean
+  pagination?: PaginationState
+  onPaginationChange?: (next: PaginationState) => void
+  search?: string
+  onSearchChange?: (value: string) => void
 }
 
-export function DataTable({ columns, data, showToolbar = true, showPagination = true }: DataTableProps) {
-
+export function DataTable({
+  columns,
+  data,
+  showToolbar = true,
+  showPagination = true,
+  pagination,
+  onPaginationChange,
+  search,
+  onSearchChange,
+}: DataTableProps) {
   const [rowSelection, setRowSelection] = React.useState({})
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  )
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [sorting, setSorting] = React.useState<SortingState>([])
 
   const table = useReactTable({
@@ -58,7 +72,6 @@ export function DataTable({ columns, data, showToolbar = true, showPagination = 
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
@@ -66,7 +79,13 @@ export function DataTable({ columns, data, showToolbar = true, showPagination = 
 
   return (
     <div className='space-y-4'>
-      {showToolbar ? <DataTableToolbar table={table} /> : null}
+      {showToolbar ? (
+        <DataTableToolbar
+          table={table}
+          search={search ?? ''}
+          onSearchChange={(val) => onSearchChange?.(val)}
+        />
+      ) : null}
       <div className='overflow-hidden rounded-md border'>
         <Table>
           <TableHeader>
@@ -90,26 +109,17 @@ export function DataTable({ columns, data, showToolbar = true, showPagination = 
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                >
+                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className='h-24 text-center'
-                >
+                <TableCell colSpan={columns.length} className='h-24 text-center'>
                   No results.
                 </TableCell>
               </TableRow>
@@ -117,7 +127,9 @@ export function DataTable({ columns, data, showToolbar = true, showPagination = 
           </TableBody>
         </Table>
       </div>
-      {showPagination ? <DataTablePagination table={table} /> : null}
+      {showPagination && pagination && onPaginationChange ? (
+        <DataTablePagination table={table} pagination={pagination} onChange={onPaginationChange} />
+      ) : null}
     </div>
   )
 }

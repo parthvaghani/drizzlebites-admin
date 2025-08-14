@@ -7,7 +7,6 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
@@ -22,13 +21,33 @@ import {
 import { DataTablePagination } from '@/features/categories/components/data-table-pagination'
 import { DataTableToolbar } from '@/features/categories/components/data-table-toolbar'
 
+interface PaginationState {
+  page: number
+  limit: number
+  total?: number
+}
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  showToolbar?: boolean
+  showPagination?: boolean
+  pagination?: PaginationState
+  onPaginationChange?: (next: PaginationState) => void
+  search?: string
   onSearchChange?: (value: string) => void
 }
 
-export function DataTable<TData, TValue>({ columns, data, onSearchChange }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({
+  columns,
+  data,
+  showToolbar = true,
+  showPagination = true,
+  pagination,
+  onPaginationChange,
+  search,
+  onSearchChange,
+}: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -50,13 +69,14 @@ export function DataTable<TData, TValue>({ columns, data, onSearchChange }: Data
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
   })
 
   return (
     <div className='space-y-4'>
-      <DataTableToolbar table={table} onSearchChange={onSearchChange} />
+      {showToolbar ? (
+        <DataTableToolbar table={table} search={search ?? ''} onSearchChange={(val) => onSearchChange?.(val)} />
+      ) : null}
       <div className='overflow-hidden rounded-md border'>
         <Table>
           <TableHeader>
@@ -95,7 +115,9 @@ export function DataTable<TData, TValue>({ columns, data, onSearchChange }: Data
           </TableBody>
         </Table>
       </div>
-      <DataTablePagination table={table} />
+      {showPagination && pagination && onPaginationChange ? (
+        <DataTablePagination table={table} pagination={pagination} onChange={onPaginationChange} />
+      ) : null}
     </div>
   )
 }

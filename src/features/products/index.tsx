@@ -18,11 +18,14 @@ import { Label } from '@/components/ui/label';
 export default function Products() {
   const [isPremium, setIsPremium] = useState<boolean | undefined>(undefined);
   const [isPopular, setIsPopular] = useState<boolean | undefined>(undefined);
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(10);
+  const [search, setSearch] = useState<string>('');
 
-  // Keep UI minimal: only premium/popular switches
   const { data, isLoading, isError, error, isFetching } = useProductsList({
-    page: 1,
-    limit: 100,
+    page,
+    limit,
+    search,
     isPremium,
     isPopular,
   });
@@ -56,7 +59,10 @@ export default function Products() {
                 <Switch
                   id='filter-premium'
                   checked={isPremium ?? false}
-                  onCheckedChange={(val) => setIsPremium(val ? true : undefined)}
+                  onCheckedChange={(val) => {
+                    setIsPremium(val ? true : undefined)
+                    setPage(1)
+                  }}
                 />
               </div>
               <div className='flex items-center gap-2'>
@@ -64,7 +70,10 @@ export default function Products() {
                 <Switch
                   id='filter-popular'
                   checked={isPopular ?? false}
-                  onCheckedChange={(val) => setIsPopular(val ? true : undefined)}
+                  onCheckedChange={(val) => {
+                    setIsPopular(val ? true : undefined)
+                    setPage(1)
+                  }}
                 />
               </div>
             </div>
@@ -124,6 +133,16 @@ export default function Products() {
                 ingredients?: string[];
                 benefits?: string[];
               }, unknown>[]}
+              search={search}
+              onSearchChange={(val) => {
+                setSearch(val);
+                setPage(1);
+              }}
+              pagination={{ page, limit, total: data?.total ?? products.length }}
+              onPaginationChange={({ page: nextPage, limit: nextLimit }) => {
+                setPage(nextPage);
+                setLimit(nextLimit);
+              }}
             />
           )}
         </div>

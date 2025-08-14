@@ -5,20 +5,27 @@ import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { DataTable } from './components/data-table'
 import { columns, type SuggestedProduct } from './components/columns'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useSuggestedProductsList } from '@/hooks/use-suggested-products'
 
 export default function SuggestedProducts() {
   const [status, setStatus] = useState<'all' | 'pending' | 'reviewed' | 'approved' | 'rejected'>('all')
   const statusParam = useMemo(() => (status === 'all' ? undefined : status), [status])
+  const [page, setPage] = useState<number>(1)
+  const [limit, setLimit] = useState<number>(10)
   const [search, setSearch] = useState('')
   const { data, isLoading, isError, error, isFetching } = useSuggestedProductsList({
-    page: 1,
-    limit: 100,
+    page,
+    limit,
     search,
     status: statusParam,
   })
+
+  const handleSearchChange = useCallback((val: string) => {
+    setSearch(val)
+    setPage(1)
+  }, [])
 
   return (
     <>
@@ -63,7 +70,13 @@ export default function SuggestedProducts() {
             <DataTable
               data={(data?.results as SuggestedProduct[]) ?? []}
               columns={columns}
-              onSearchChange={setSearch}
+              search={search}
+              onSearchChange={handleSearchChange}
+              pagination={{ page, limit, total: data?.total ?? data?.results?.length ?? 0 }}
+              onPaginationChange={({ page: nextPage, limit: nextLimit }) => {
+                setPage(nextPage)
+                setLimit(nextLimit)
+              }}
             />
           )}
         </div>
