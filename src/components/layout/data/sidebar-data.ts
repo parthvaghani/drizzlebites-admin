@@ -7,6 +7,7 @@ import {
   // IconError404,
   // IconHelp,
   IconLayoutDashboard,
+  IconMessages,
   IconMoodPin,
   // IconLock,
   // IconLockAccess,
@@ -76,6 +77,11 @@ export const sidebarData: SidebarData = {
           title: 'Suggested Products',
           url: '/suggested-products',
           icon: IconAugmentedReality,
+        },
+        {
+          title: 'Whatsapp Leads',
+          url: '/whatsapp-leads',
+          icon: IconMessages,
         },
         // {
         //   title: 'Chats',

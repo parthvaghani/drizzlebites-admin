@@ -15,7 +15,7 @@ export default function SuggestedProducts() {
   const [search, setSearch] = useState('')
   const { data, isLoading, isError, error, isFetching } = useSuggestedProductsList({
     page: 1,
-    limit: 5,
+    limit: 100,
     search,
     status: statusParam,
   })
@@ -38,7 +38,7 @@ export default function SuggestedProducts() {
           </div>
           <div className='flex items-center gap-3'>
             <div className='flex items-center gap-2'>
-              <Select value={status} onValueChange={(val: any) => setStatus(val)}>
+              <Select value={status} onValueChange={(val: 'all' | 'pending' | 'reviewed' | 'approved' | 'rejected') => setStatus(val)}>
                 <SelectTrigger id='status-filter' className='h-8 w-[160px]'>
                   <SelectValue placeholder='All' />
                 </SelectTrigger>

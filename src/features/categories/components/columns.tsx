@@ -42,15 +42,15 @@ export const columns: ColumnDef<Category>[] = [
   },
 
   // ✅ ID Column
-  {
-    accessorKey: 'id',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Category ID'  />
-    ),
-    cell: ({ row }) => <div className='w-[210px] truncate'>{row.getValue('id')}</div>,
-    enableSorting: false,
-    enableHiding: false,
-  },
+  // {
+  //   accessorKey: 'id',
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title='Category ID'  />
+  //   ),
+  //   cell: ({ row }) => <div className='w-[210px] truncate'>{row.getValue('id')}</div>,
+  //   enableSorting: false,
+  //   enableHiding: false,
+  // },
 
   // ✅ Category Column (Slug or Identifier)
   {
@@ -89,7 +89,7 @@ export const columns: ColumnDef<Category>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Description" className='text-center' />,
     cell: ({ row }) => {
       const description = row.getValue('description') as string
-      const maxLength = 25 // reduced length to prevent scroll
+      const maxLength = 50 // reduced length to prevent scroll
       const truncated = description?.length > maxLength ? `${description.slice(0, maxLength)}...` : description || '—'
 
       return (

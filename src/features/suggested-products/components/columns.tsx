@@ -4,18 +4,43 @@ import type { VariantProps } from 'class-variance-authority';
 import { DataTableColumnHeader } from '@/features/categories/components/data-table-column-header';
 import { DataTableRowActions } from './data-table-row-actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Checkbox } from '@/components/ui/checkbox';
 
 export interface SuggestedProduct {
   _id: string;
   name: string;
   ingredients: string[];
   description: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'reviewed' | 'approved' | 'rejected';
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }
 
 export const columns: ColumnDef<SuggestedProduct>[] = [
+  {
+    id: 'select',
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && 'indeterminate')
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label='Select all'
+        className='translate-y-[2px]'
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label='Select row'
+        className='translate-y-[2px]'
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
   {
     accessorKey: 'name',
     header: ({ column }) => (
@@ -80,9 +105,24 @@ export const columns: ColumnDef<SuggestedProduct>[] = [
       <DataTableColumnHeader column={column} title='Status' />
     ),
     cell: ({ getValue }) => {
-      const status = String(getValue() ?? 'pending') as SuggestedProduct['status'];
-      const variant: VariantProps<typeof badgeVariants>['variant'] =
-      status === 'approved' ? 'default' : status === 'rejected' ? 'destructive' : 'secondary';
+      const status = (getValue() ?? 'pending') as SuggestedProduct['status'];
+      let variant: VariantProps<typeof badgeVariants>['variant'] = 'default';
+      switch (status) {
+        case 'pending':
+          variant = 'pending';
+          break;
+        case 'reviewed':
+          variant = 'reviewed';
+          break;
+        case 'approved':
+          variant = 'enable';
+          break;
+        case 'rejected':
+          variant = 'destructive';
+          break;
+        default:
+          variant = 'default';
+      }
       return <Badge variant={variant}>{status}</Badge>;
     },
   },

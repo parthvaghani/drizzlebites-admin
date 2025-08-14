@@ -25,6 +25,7 @@ import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-p
 import { Route as ClerkAuthenticatedRouteRouteImport } from './routes/clerk/_authenticated/route'
 import { Route as ClerkauthRouteRouteImport } from './routes/clerk/(auth)/route'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
+import { Route as AuthenticatedWhatsappLeadsIndexRouteImport } from './routes/_authenticated/whatsapp-leads/index'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedTestimonialsIndexRouteImport } from './routes/_authenticated/testimonials/index'
 import { Route as AuthenticatedSuggestedProductsIndexRouteImport } from './routes/_authenticated/suggested-products/index'
@@ -117,6 +118,12 @@ const AuthenticatedSettingsRouteRoute =
   AuthenticatedSettingsRouteRouteImport.update({
     id: '/settings',
     path: '/settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedWhatsappLeadsIndexRoute =
+  AuthenticatedWhatsappLeadsIndexRouteImport.update({
+    id: '/whatsapp-leads/',
+    path: '/whatsapp-leads/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
@@ -236,6 +243,7 @@ export interface FileRoutesByFullPath {
   '/suggested-products': typeof AuthenticatedSuggestedProductsIndexRoute
   '/testimonials': typeof AuthenticatedTestimonialsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/whatsapp-leads': typeof AuthenticatedWhatsappLeadsIndexRoute
 }
 export interface FileRoutesByTo {
   '/clerk': typeof ClerkAuthenticatedRouteRouteWithChildren
@@ -265,6 +273,7 @@ export interface FileRoutesByTo {
   '/suggested-products': typeof AuthenticatedSuggestedProductsIndexRoute
   '/testimonials': typeof AuthenticatedTestimonialsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/whatsapp-leads': typeof AuthenticatedWhatsappLeadsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -299,6 +308,7 @@ export interface FileRoutesById {
   '/_authenticated/suggested-products/': typeof AuthenticatedSuggestedProductsIndexRoute
   '/_authenticated/testimonials/': typeof AuthenticatedTestimonialsIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/whatsapp-leads/': typeof AuthenticatedWhatsappLeadsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -332,6 +342,7 @@ export interface FileRouteTypes {
     | '/suggested-products'
     | '/testimonials'
     | '/users'
+    | '/whatsapp-leads'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/clerk'
@@ -361,6 +372,7 @@ export interface FileRouteTypes {
     | '/suggested-products'
     | '/testimonials'
     | '/users'
+    | '/whatsapp-leads'
   id:
     | '__root__'
     | '/_authenticated'
@@ -394,6 +406,7 @@ export interface FileRouteTypes {
     | '/_authenticated/suggested-products/'
     | '/_authenticated/testimonials/'
     | '/_authenticated/users/'
+    | '/_authenticated/whatsapp-leads/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -523,6 +536,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/whatsapp-leads/': {
+      id: '/_authenticated/whatsapp-leads/'
+      path: '/whatsapp-leads'
+      fullPath: '/whatsapp-leads'
+      preLoaderRoute: typeof AuthenticatedWhatsappLeadsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/users/': {
@@ -666,6 +686,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSuggestedProductsIndexRoute: typeof AuthenticatedSuggestedProductsIndexRoute
   AuthenticatedTestimonialsIndexRoute: typeof AuthenticatedTestimonialsIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
+  AuthenticatedWhatsappLeadsIndexRoute: typeof AuthenticatedWhatsappLeadsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -679,6 +700,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedSuggestedProductsIndexRoute,
   AuthenticatedTestimonialsIndexRoute: AuthenticatedTestimonialsIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
+  AuthenticatedWhatsappLeadsIndexRoute: AuthenticatedWhatsappLeadsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Link } from '@tanstack/react-router'
+// import { Link } from '@tanstack/react-router'
 import AuthLayout from '../auth-layout'
 import { UserAuthForm } from './components/user-auth-form'
 
@@ -15,8 +15,8 @@ export default function SignIn() {
     <AuthLayout>
       <Card className='gap-4'>
         <CardHeader>
-          <CardTitle className='text-lg tracking-tight'>Login</CardTitle>
-          <CardDescription>
+          <CardTitle className='text-lg tracking-tight text-center'>Login</CardTitle>
+          <CardDescription className='text-center'>
             Enter your email and password below to <br />
             log into your account
           </CardDescription>
@@ -24,8 +24,8 @@ export default function SignIn() {
         <CardContent>
           <UserAuthForm />
         </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <p className='text-muted-foreground px-8 text-center text-sm'>
+        <CardFooter className="flex flex-col">
+          <p className='text-muted-foreground px-8 pb-4 text-center text-sm'>
             By clicking login, you agree to our{' '}
             <a
               href='/terms'
@@ -42,7 +42,7 @@ export default function SignIn() {
             </a>
             .
           </p>
-          <p className='text-muted-foreground text-center text-sm'>
+          {/* <p className='text-muted-foreground text-center text-sm'>
             Don't have an account?{' '}
             <Link
               to='/sign-up'
@@ -50,7 +50,7 @@ export default function SignIn() {
             >
               Sign up
             </Link>
-          </p>
+          </p> */}
         </CardFooter>
       </Card>
     </AuthLayout>

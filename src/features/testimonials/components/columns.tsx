@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { DataTableColumnHeader } from './data-table-column-header';
 import { DataTableRowActions } from './data-table-row-actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Checkbox } from '@/components/ui/checkbox';
 
 export interface Testimonial {
   _id: string;
@@ -17,6 +18,30 @@ export interface Testimonial {
 }
 
 export const columns: ColumnDef<Testimonial>[] = [
+  {
+    id: 'select',
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && 'indeterminate')
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label='Select all'
+        className='translate-y-[2px]'
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label='Select row'
+        className='translate-y-[2px]'
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
   {
     accessorKey: 'name',
     header: ({ column }) => (
@@ -104,7 +129,7 @@ export const columns: ColumnDef<Testimonial>[] = [
     cell: ({ getValue }) => {
       const visible = Boolean(getValue());
       return (
-        <Badge variant={visible ? 'default' : 'destructive'}>
+        <Badge variant={visible ? 'enable' : 'destructive'}>
           {visible ? 'Yes' : 'No'}
         </Badge>
       );

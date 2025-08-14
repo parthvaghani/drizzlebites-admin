@@ -67,7 +67,7 @@ const deleteSuggestedProductApi = async (id: string): Promise<void> => {
 }
 
 export function useSuggestedProductsList(params: GetSuggestedProductsParams) {
-  const { page = 1, limit = 5, search = '', status } = params
+  const { page = 1, limit = 100, search = '', status } = params
   return useQuery({
     queryKey: ['suggested-products', { page, limit, search, status }],
     queryFn: () => getSuggestedProductsApi({ page, limit, search, status }),
