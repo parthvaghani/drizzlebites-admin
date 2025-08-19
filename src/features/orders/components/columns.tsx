@@ -62,11 +62,23 @@ export const columns: ColumnDef<OrderRow>[] = [
     {
         accessorKey: 'status',
         header: ({ column }) => <DataTableColumnHeader column={column} title='Status' />,
-        cell: ({ row }) => (
-            <Badge variant={row.original.status === 'placed' ? 'enable' : 'pending'}>
-                {row.original.status}
-            </Badge>
-        ),
+        cell: ({ row }) => {
+            const status = row.original.status?.toLowerCase();
+            const statusVariantMap: Record<string, 'enable' | 'reviewed' | 'placed' | 'inprogress' | 'destructive' | 'delivered' | 'default'> = {
+                placed: 'placed',
+                accepted: 'reviewed',
+                inprogress: 'inprogress',
+                completed: 'enable',
+                cancelled: 'destructive',
+                delivered: 'delivered',
+            };
+            const variant = statusVariantMap[status] || 'default';
+            return (
+                <Badge variant={variant}>
+                    {row.original.status}
+                </Badge>
+            );
+        },
     },
     {
         id: 'amount',
