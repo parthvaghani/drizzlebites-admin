@@ -5,9 +5,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow as UiTR } from '@/components/ui/table';
-import { useIdByOrder, type Order } from '@/hooks/use-orders';
-import { ShoppingCart, CheckCircle2, Package, XCircle, Hourglass, PackageCheck, } from 'lucide-react';
+import { useIdByOrder, useUpdateOrderShippingCharge, type Order } from '@/hooks/use-orders';
+import { ShoppingCart, CheckCircle2, Package, XCircle, Hourglass, PackageCheck, Edit2, Save, X } from 'lucide-react';
 import { ContentLoader } from '@/components/content-loader';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 export interface OrderRow {
   _id: string;
@@ -27,6 +29,7 @@ export interface OrderRow {
   createdAt: string;
   totalAmount?: number;
   originalTotal?: number;
+  shippingCharge?: number;
   images?: string[];
   address?: {
     addressLine1?: string;
@@ -73,6 +76,7 @@ type NormalizedOrder = {
   productsDetails?: OrderRow['productsDetails'];
   totalAmount?: number;
   originalTotal?: number;
+  shippingCharge?: number;
   statusHistory?: StatusHistoryEntry[];
 };
 
@@ -97,7 +101,16 @@ const STATUS_VARIANTS = {
 export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
   const order = row.original;
   const [open, setOpen] = useState(false);
+  const [isEditingShipping, setIsEditingShipping] = useState(false);
+  const [shippingChargeValue, setShippingChargeValue] = useState<number>(0);
   const { data: fetchedOrder, isLoading: isLoadingOrder, refetch } = useIdByOrder(open ? order._id : undefined);
+  const updateShippingChargeMutation = useUpdateOrderShippingCharge();
+
+  useEffect(() => {
+    if (open) {
+      refetch();
+    }
+  }, [open, refetch]);
 
   useEffect(() => {
     if (open) {
@@ -116,10 +129,40 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
     productsDetails: o.productsDetails as NormalizedOrder['productsDetails'],
     totalAmount: undefined,
     originalTotal: undefined,
+    shippingCharge: o.shippingCharge,
     statusHistory: (o as unknown as { statusHistory?: StatusHistoryEntry[]; }).statusHistory,
   });
 
   const detail: NormalizedOrder = fetchedOrder ? normalizeOrderFromApi(fetchedOrder) : order;
+
+  useEffect(() => {
+    if (detail?.shippingCharge !== undefined) {
+      setShippingChargeValue(detail.shippingCharge);
+    }
+  }, [detail?.shippingCharge]);
+
+  const handleShippingChargeEdit = () => {
+    setIsEditingShipping(true);
+  };
+
+  const handleShippingChargeSave = async () => {
+    try {
+      await updateShippingChargeMutation.mutateAsync({
+        id: detail._id,
+        shippingCharge: shippingChargeValue,
+      });
+      setIsEditingShipping(false);
+      toast.success('Shipping charge updated successfully');
+      refetch();
+    } catch (_error) {
+      toast.error('Failed to update shipping charge');
+    }
+  };
+
+  const handleShippingChargeCancel = () => {
+    setShippingChargeValue(detail?.shippingCharge ?? 0);
+    setIsEditingShipping(false);
+  };
 
   const formatINR = (amount: number) =>
     new Intl.NumberFormat('en-IN', {
@@ -190,22 +233,22 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
       }
       if (isCompleted) {
         return {
-          circle: "bg-primary border-primary text-primary-foreground",
-          connector: "bg-primary",
+          circle: "bg-muted border-muted text-primary",
+          connector: "bg-foreground",
           label: "text-foreground"
         };
       }
       if (isActive) {
         return {
-          circle: "border-primary text-primary bg-white",
+          circle: "border-primary text-primary-foreground bg-primary",
           connector: "bg-primary",
           label: "text-foreground"
         };
       }
       return {
-        circle: "bg-muted border-border text-muted-foreground",
+        circle: "bg-white border-border text-muted",
         connector: "bg-border",
-        label: "text-foreground"
+        label: "text-muted"
       };
     };
 
@@ -219,7 +262,7 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
           flex items-center justify-center mb-3
           ${classes.circle}
         `}>
-          <Icon className={`h-5 w-5 ${isActive && step.key === "inprogress" ? "animate-spin" : ""}`} />
+          <Icon className={`h-5 w-5 ${isActive && step.key === "inprogress" ? "" : ""}`} />
         </div>
 
         {/* Step content */}
@@ -265,8 +308,8 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
   const current = currentStatus.toLowerCase();
   const stepIndex = allSteps.findIndex((s) => s.key === current);
   const isCancelled = current === "cancelled";
-  const currentStep = ORDER_STEPS.find((s) => s.key === current);
-  const CurrentStatusIcon = currentStep?.icon;
+  // const currentStep = ORDER_STEPS.find((s) => s.key === current);
+  // const CurrentStatusIcon = currentStep?.icon;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -283,7 +326,7 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <span>Order Details</span>
-                <Badge variant={order.paymentStatus === 'paid' ? 'enable' : 'destructive'} className='shadow-xl/30'>{order.paymentStatus}</Badge>
+                <Badge variant={order.paymentStatus === 'paid' ? 'enable' : 'destructive'} className='shadow-xl/15'>{order.paymentStatus}</Badge>
               </DialogTitle>
             </DialogHeader>
 
@@ -315,6 +358,54 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                         {detail?.createdAt ? new Date(detail.createdAt).toLocaleString('en-IN') : ''}
                       </span>
                     </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Shipping Charge</span>
+                      <div className="flex items-center gap-2">
+                        {isEditingShipping ? (
+                          <>
+                            <Input
+                              type="number"
+                              value={shippingChargeValue}
+                              onChange={(e) => setShippingChargeValue(Number(e.target.value))}
+                              className="w-20 h-8 text-sm"
+                              min="0"
+                              step="0.01"
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={handleShippingChargeSave}
+                              disabled={updateShippingChargeMutation.isPending}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Save className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={handleShippingChargeCancel}
+                              className="h-8 w-8 p-0"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-medium">{formatINR(detail?.shippingCharge ?? 0)}</span>
+                            {currentStatus !== 'delivered' && currentStatus !== 'cancelled' && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={handleShippingChargeEdit}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
                     {detail?.cancelDetails?.reason && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Cancel Reason</span>
@@ -327,23 +418,24 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                 {/* Shipping Address */}
                 <div className="space-y-3">
                   <h3 className="font-semibold text-base">Shipping Address</h3>
-                  <div className="rounded-lg border p-4 bg-muted/20">
+                  <div className="rounded-lg border p-4 bg-muted/20 break-words whitespace-pre-wrap">
                     {detail?.address ? (
                       <>
-                        <div>{detail.address.addressLine1}</div>
-                        {detail.address.addressLine2 && <div>{detail.address.addressLine2}</div>}
+                        <div>{detail.address.addressLine1},</div>
+                        {detail.address.addressLine2 && <div>{detail.address.addressLine2},</div>}
                         <div>
                           {[detail.address.city, detail.address.state, detail.address.zip]
                             .filter(Boolean)
-                            .join(', ')}
+                            .join(', ')},
                         </div>
-                        <div>{detail.address.country}</div>
+                        <div>{detail.address.country}.</div>
                       </>
                     ) : (
                       <div className="text-muted-foreground">No address provided</div>
                     )}
                   </div>
                 </div>
+
               </div>
 
               <Separator />
@@ -416,10 +508,14 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                         <span>Discount:</span>
                         <span>- {formatINR((order.originalTotal ?? 0) - (detail.totalAmount ?? 0))}</span>
                       </div>
+                      <div className="flex justify-between">
+                        <span>Shipping:</span>
+                        <span>{formatINR(detail?.shippingCharge ?? 0)}</span>
+                      </div>
                       <Separator />
                       <div className="flex justify-between text-lg font-bold">
                         <span>Total:</span>
-                        <span>{formatINR(order.totalAmount ?? 0)}</span>
+                        <span>{formatINR((order.totalAmount ?? 0) + (detail?.shippingCharge ?? 0))}</span>
                       </div>
                     </div>
                   </div>
@@ -432,7 +528,7 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-base">Order Tracking</h3>
-                  <Badge variant={status} className='shadow-xl/30' >{currentStatus}</Badge>
+                  <Badge variant={status} className='shadow-xl/15' >{currentStatus}</Badge>
                 </div>
                 <div className="flex flex-col justify-center items-center bg-muted/20 dark:bg-accent/15 rounded-lg p-6">
                   <div className="flex items-start justify-between relative w-full">
@@ -456,7 +552,7 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                       );
                     })}
                   </div>
-                  <div className="mt-8 text-center">
+                  {/* <div className="mt-8 text-center">
                     <Badge variant={currentStatus !== 'cancelled' ? 'trackDelivered' : 'trackCancelled'} className='shadow-xl/25' >
                       <span className="flex items-center justify-center gap-1">
                         {CurrentStatusIcon ? (
@@ -465,7 +561,7 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                         {currentStep?.text || ''}
                       </span>
                     </Badge>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>

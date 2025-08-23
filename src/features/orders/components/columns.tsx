@@ -114,6 +114,15 @@ export const columns: ColumnDef<OrderRow>[] = [
         },
     },
     {
+        accessorKey: 'shippingCharge',
+        header: ({ column }) => <DataTableColumnHeader column={column} title='Shipping' />,
+        cell: ({ row }) => {
+            const shippingCharge = row.original.shippingCharge ?? 0;
+            const fmt = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
+            return <span className='font-medium'>{fmt(shippingCharge)}</span>;
+        },
+    },
+    {
         accessorKey: 'paymentStatus',
         header: ({ column }) => <DataTableColumnHeader column={column} title='Payment Status' />,
         cell: ({ row }) => <PaymentStatusCell order={row.original} />,

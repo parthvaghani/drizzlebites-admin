@@ -51,6 +51,7 @@ export default function Orders() {
                 images: (o.productsDetails || []).flatMap((p) => (p?.productId && Array.isArray(p.productId.images)) ? p.productId.images : []),
                 totalAmount: discountedTotal,
                 originalTotal,
+                shippingCharge: o.shippingCharge,
                 address: o.address,
                 productsDetails: o.productsDetails,
                 updatedAt: o.updatedAt ?? '',

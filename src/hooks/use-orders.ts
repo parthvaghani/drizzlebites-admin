@@ -32,6 +32,7 @@ export interface Order {
   phoneNumber: string;
   status: string;
   paymentStatus?: string;
+  shippingCharge?: number;
   createdAt: string;
   updatedAt?: string;
   cancelDetails?: { reason?: string | null; };
@@ -119,6 +120,17 @@ const updateOrderStatusApi = async ({ id, status, paymentStatus, note }: UpdateO
   return response.data;
 };
 
+// Update order shipping charge
+export interface UpdateOrderShippingChargePayload {
+  id: string;
+  shippingCharge: number;
+}
+
+const updateOrderShippingChargeApi = async ({ id, shippingCharge }: UpdateOrderShippingChargePayload) => {
+  const response = await api.put(`/orders/${id}`, { shippingCharge });
+  return response.data;
+};
+
 export function useOrdersList(params: GetOrdersParams) {
   const { page = 1, limit = 10, search = '', status, sortBy } = params;
   return useQuery({
@@ -148,6 +160,17 @@ export function useUpdateOrderStatus() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateOrderStatusApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+}
+
+// Mutation hook to update order shipping charge
+export function useUpdateOrderShippingCharge() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateOrderShippingChargeApi,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     },
