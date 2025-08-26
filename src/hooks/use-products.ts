@@ -79,49 +79,89 @@ const getProductByIdApi = async (id: string): Promise<Product> => {
   return response.data
 }
 
-//  Create new product
-const createProductApi = async (payload: {
-  category: string; // category ID
-  name: string;
-  description?: string;
-  isPremium?: boolean;
-  isPopular?: boolean;
-  variants?: Variants;
-  images?: string[];
-  ingredients?: string[];
-  benefits?: string[];
-}): Promise<Product> => {
+//  Create new product (supports JSON or multipart FormData)
+const createProductApi = async (
+  payload:
+    | {
+        category: string; // category ID
+        name: string;
+        description?: string;
+        isPremium?: boolean;
+        isPopular?: boolean;
+        variants?: Variants;
+        images?: string[];
+        ingredients?: string[];
+        benefits?: string[];
+      }
+    | FormData
+): Promise<Product> => {
+  // If payload is FormData, set multipart headers
+  if (typeof FormData !== 'undefined' && payload instanceof FormData) {
+    const response = await api.post('/products/product', payload, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data
+  }
   const response = await api.post('/products/product', payload)
   return response.data
 }
 
-//  Update product
-const updateProductApi = async (payload: {
-  id: string;
-  category: string;
-  name: string;
-  description?: string;
-  isPremium?: boolean;
-  isPopular?: boolean;
-  variants?: Variants;
-  images?: string[];
-  ingredients?: string[];
-  benefits?: string[];
-}): Promise<Product> => {
-  const updatedPayload = {
-    category: payload.category,
-    name: payload.name,
-    description: payload.description,
-    isPremium: payload.isPremium,
-    isPopular: payload.isPopular,
-    variants: payload.variants,
-    images: payload.images || [],
-    ingredients: payload.ingredients || [],
-    benefits: payload.benefits || [],
+//  Update product (supports JSON or multipart FormData)
+const updateProductApi = async (
+  payload:
+    | {
+        id: string
+        category: string
+        name: string
+        description?: string
+        isPremium?: boolean
+        isPopular?: boolean
+        variants?: Variants
+        images?: string[]
+        ingredients?: string[]
+        benefits?: string[]
+      }
+    | { id: string; data: FormData }
+): Promise<Product> => {
+  // If FormData is provided, send multipart PUT like the provided curl
+  if (
+    typeof FormData !== 'undefined' &&
+    (payload as { data?: unknown }).data instanceof FormData
+  ) {
+    const { id, data } = payload as { id: string; data: FormData }
+    const response = await api.put(`/products/product/${id}`, data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data
   }
 
-  const response = await api.put(`/products/product/${payload.id}`, updatedPayload)
-  return response.data.data
+  const jsonPayload = payload as {
+    id: string
+    category: string
+    name: string
+    description?: string
+    isPremium?: boolean
+    isPopular?: boolean
+    variants?: Variants
+    images?: string[]
+    ingredients?: string[]
+    benefits?: string[]
+  }
+
+  const updatedPayload = {
+    category: jsonPayload.category,
+    name: jsonPayload.name,
+    description: jsonPayload.description,
+    isPremium: jsonPayload.isPremium,
+    isPopular: jsonPayload.isPopular,
+    variants: jsonPayload.variants,
+    images: jsonPayload.images || [],
+    ingredients: jsonPayload.ingredients || [],
+    benefits: jsonPayload.benefits || [],
+  }
+
+  const response = await api.put(`/products/product/${jsonPayload.id}`, updatedPayload)
+  return response.data.data ?? response.data
 }
 
 //  Delete product

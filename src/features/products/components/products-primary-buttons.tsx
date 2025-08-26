@@ -1,32 +1,32 @@
-import { useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 // import { IconDownload } from '@tabler/icons-react'
-import { IconPlus } from '@tabler/icons-react'
-import { toast } from 'sonner'
-import { useProductCategories } from '@/hooks/use-categories'
-import { useCreateProduct } from '@/hooks/use-products'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { IconPlus } from '@tabler/icons-react';
+import { toast } from 'sonner';
+import { useProductCategories } from '@/hooks/use-categories';
+import { useCreateProduct } from '@/hooks/use-products';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/components/ui/select';
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetFooter,
-} from '@/components/ui/sheet'
-import { Switch } from '@/components/ui/switch'
+} from '@/components/ui/sheet';
+import { Switch } from '@/components/ui/switch';
 
 export function ProductsPrimaryButtons() {
-  const [openSheet, setOpenSheet] = useState(false)
-  const queryClient = useQueryClient()
+  const [openSheet, setOpenSheet] = useState(false);
+  const queryClient = useQueryClient();
 
   const [productData, setProductData] = useState({
     category: '',
@@ -38,77 +38,87 @@ export function ProductsPrimaryButtons() {
     isPremium: false,
     isPopular: false,
     variants: {
-      gm: [] as { weight: string; price: number; discount: number }[],
-      kg: [] as { weight: string; price: number; discount: number }[],
+      gm: [] as { weight: string; price: number; discount: number; }[],
+      kg: [] as { weight: string; price: number; discount: number; }[],
     },
-  })
+  });
 
   // Temporary local states for adding
-  const [imageInput, setImageInput] = useState('')
-  const [ingredientInput, setIngredientInput] = useState('')
-  const [benefitInput, setBenefitInput] = useState('')
-  const [variantType, setVariantType] = useState<'gm' | 'kg'>('gm')
-  const [variantWeight, setVariantWeight] = useState('')
-  const [variantPrice, setVariantPrice] = useState('')
-  const [variantDiscount, setVariantDiscount] = useState('')
-  const { data: categories = [] } = useProductCategories()
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [ingredientInput, setIngredientInput] = useState('');
+  const [benefitInput, setBenefitInput] = useState('');
+  const [variantType, setVariantType] = useState<'gm' | 'kg'>('gm');
+  const [variantWeight, setVariantWeight] = useState('');
+  const [variantPrice, setVariantPrice] = useState('');
+  const [variantDiscount, setVariantDiscount] = useState('');
+  const { data: categories = [] } = useProductCategories();
 
-  const { mutate: createProduct, isPending } = useCreateProduct()
+  const { mutate: createProduct, isPending } = useCreateProduct();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setProductData({ ...productData, [e.target.name]: e.target.value })
-  }
+    setProductData({ ...productData, [e.target.name]: e.target.value });
+  };
 
-  const handleAddImage = () => {
-    if (imageInput.trim()) {
-      setProductData((prev) => ({
-        ...prev,
-        images: [...prev.images, imageInput.trim()],
-      }))
-      setImageInput('')
+  const handleImagesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const remainingSlots = 5 - imageFiles.length;
+    const toAdd = files.slice(0, Math.max(0, remainingSlots));
+
+    if (files.length > remainingSlots) {
+      toast.warning('You can upload a maximum of 5 images. Extra files ignored.');
     }
-  }
+
+    if (toAdd.length === 0) return;
+
+    setImageFiles((prev) => [...prev, ...toAdd]);
+    const newPreviews = toAdd.map((file) => URL.createObjectURL(file));
+    setProductData((prev) => ({ ...prev, images: [...prev.images, ...newPreviews] }));
+  };
 
   const handleRemoveImage = (index: number) => {
-    setProductData((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }))
-  }
+    const urlToRevoke = productData.images[index];
+    if (urlToRevoke) URL.revokeObjectURL(urlToRevoke);
+    const updatedFiles = imageFiles.filter((_, i) => i !== index);
+    setImageFiles(updatedFiles);
+    const updatedPreviews = productData.images.filter((_, i) => i !== index);
+    setProductData((prev) => ({ ...prev, images: updatedPreviews }));
+  };
 
   const handleAddIngredient = () => {
     if (ingredientInput.trim()) {
       setProductData((prev) => ({
         ...prev,
         ingredients: [...prev.ingredients, ingredientInput.trim()],
-      }))
-      setIngredientInput('')
+      }));
+      setIngredientInput('');
     }
-  }
+  };
 
   const handleRemoveIngredient = (index: number) => {
     setProductData((prev) => ({
       ...prev,
       ingredients: prev.ingredients.filter((_, i) => i !== index),
-    }))
-  }
+    }));
+  };
 
   const handleAddBenefit = () => {
     if (benefitInput.trim()) {
       setProductData((prev) => ({
         ...prev,
         benefits: [...prev.benefits, benefitInput.trim()],
-      }))
-      setBenefitInput('')
+      }));
+      setBenefitInput('');
     }
-  }
+  };
 
   const handleRemoveBenefit = (index: number) => {
     setProductData((prev) => ({
       ...prev,
       benefits: prev.benefits.filter((_, i) => i !== index),
-    }))
-  }
+    }));
+  };
 
   const handleAddVariant = () => {
     if (variantWeight && variantPrice) {
@@ -125,12 +135,12 @@ export function ProductsPrimaryButtons() {
             },
           ],
         },
-      }))
-      setVariantWeight('')
-      setVariantPrice('')
-      setVariantDiscount('')
+      }));
+      setVariantWeight('');
+      setVariantPrice('');
+      setVariantDiscount('');
     }
-  }
+  };
 
   const handleRemoveVariant = (type: 'gm' | 'kg', index: number) => {
     setProductData((prev) => ({
@@ -139,14 +149,38 @@ export function ProductsPrimaryButtons() {
         ...prev.variants,
         [type]: prev.variants[type].filter((_, i) => i !== index),
       },
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = () => {
-    createProduct(productData, {
+    // Build FormData to match backend expectations
+    const form = new FormData();
+    form.append('category', productData.category);
+    form.append('name', productData.name);
+    if (productData.description) form.append('description', productData.description);
+    form.append('isPremium', String(productData.isPremium));
+    form.append('isPopular', String(productData.isPopular));
+
+    // Ingredients and benefits as repeated fields
+    productData.ingredients.forEach((ing) => form.append('ingredients', ing));
+    productData.benefits.forEach((ben) => form.append('benefits', ben));
+
+    // Variants shape: variants[gm][0][weight], etc.
+    (['gm', 'kg'] as const).forEach((type) => {
+      productData.variants[type].forEach((v, i) => {
+        form.append(`variants[${type}][${i}][weight]`, v.weight);
+        form.append(`variants[${type}][${i}][price]`, String(v.price));
+        form.append(`variants[${type}][${i}][discount]`, String(v.discount || 0));
+      });
+    });
+
+    // Images: append each file under key 'images'
+    imageFiles.forEach((file) => form.append('images', file));
+
+    createProduct(form, {
       onSuccess: () => {
-        toast.success('Product created successfully!')
-        queryClient.invalidateQueries({ queryKey: ['products'] })
+        toast.success('Product created successfully!');
+        queryClient.invalidateQueries({ queryKey: ['products'] });
         setProductData({
           category: '',
           name: '',
@@ -157,14 +191,15 @@ export function ProductsPrimaryButtons() {
           isPremium: false,
           isPopular: false,
           variants: { gm: [], kg: [] },
-        })
-        setOpenSheet(false)
+        });
+        setImageFiles([]);
+        setOpenSheet(false);
       },
       onError: (error: Error) => {
-        toast.error(error?.message || 'Failed to create product')
+        toast.error(error?.message || 'Failed to create product');
       },
-    })
-  }
+    });
+  };
 
   return (
     <div className='flex gap-2'>
@@ -179,8 +214,8 @@ export function ProductsPrimaryButtons() {
       <Sheet open={openSheet} onOpenChange={setOpenSheet}>
         <SheetContent className='p-0 sm:max-w-lg'>
           <div className='max-h-[calc(100vh-100px)] overflow-y-auto p-6'>
-            <SheetHeader>
-              <SheetTitle className='text-xl font-semibold'>
+            <SheetHeader className='p-0'>
+              <SheetTitle className='-pl-6 text-xl font-semibold'>
                 Create New Product
               </SheetTitle>
               <p className='text-muted-foreground text-sm'>
@@ -236,16 +271,16 @@ export function ProductsPrimaryButtons() {
               {/* Images */}
               <div className='space-y-2'>
                 <Label>Images*</Label>
-                <div className='flex gap-2'>
-                  <Input
-                    value={imageInput}
-                    onChange={(e) => setImageInput(e.target.value)}
-                    placeholder='Paste image URL'
-                  />
-                  <Button type='button' onClick={handleAddImage}>
-                    Add
-                  </Button>
-                </div>
+                <Input
+                  type='file'
+                  accept='image/*'
+                  multiple
+                  onChange={handleImagesSelected}
+                  disabled={imageFiles.length >= 5}
+                />
+                <p className='text-muted-foreground text-xs'>
+                  {imageFiles.length}/5 selected
+                </p>
                 <div className='mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3'>
                   {productData.images.map((img, i) => (
                     <div
@@ -464,5 +499,5 @@ export function ProductsPrimaryButtons() {
         </SheetContent>
       </Sheet>
     </div>
-  )
+  );
 }
