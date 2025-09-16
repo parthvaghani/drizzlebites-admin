@@ -920,7 +920,7 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
                                     {product.images.map((img, i) => (
                                         <img
                                             key={i}
-                                            src={img}
+                                            src={buildImageUrl(img)}
                                             alt={`Image ${i + 1}`}
                                             className='h-28 w-full rounded border object-cover'
                                         />
