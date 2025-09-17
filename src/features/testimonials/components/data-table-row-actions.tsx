@@ -42,6 +42,12 @@ export function DataTableRowActions({ row }: { row: { original: TestimonialRow }
   const [detailsOpen, setDetailsOpen] = useState(false)
 
   const [formData, setFormData] = useState<TestimonialRow>({ ...testimonial })
+  const [errors, setErrors] = useState<{
+    name?: string
+    location?: string
+    img?: string
+    body?: string
+  }>({})
 
   useEffect(() => {
     setFormData({ ...testimonial })
@@ -52,18 +58,52 @@ export function DataTableRowActions({ row }: { row: { original: TestimonialRow }
   const { mutate: updateTestimonial, isPending: isUpdating } = useUpdateTestimonial()
   const { mutate: deleteTestimonial, isPending: isDeleting } = useDeleteTestimonial()
 
+  const validate = () => {
+    const nextErrors: {
+      name?: string
+      location?: string
+      img?: string
+      body?: string
+    } = {}
+
+    if (!formData.name || !formData.name.trim()) nextErrors.name = 'Name is required.'
+    if (!formData.location || !formData.location.trim()) nextErrors.location = 'Location is required.'
+    if (!formData.img || !formData.img.trim()) {
+      nextErrors.img = 'Image URL is required.'
+    } else {
+      const candidate = (formData.img || '').trim()
+      try {
+        const url = new URL(candidate)
+        if (!['http:', 'https:'].includes(url.protocol)) {
+          nextErrors.img = 'Image URL must start with http or https.'
+        }
+      } catch {
+        nextErrors.img = 'Image URL must be a valid URL.'
+      }
+    }
+    if (!formData.body || !formData.body.trim()) nextErrors.body = 'Testimonial is required.'
+
+    setErrors(nextErrors)
+    return Object.keys(nextErrors).length === 0
+  }
+
   const handleEditSubmit = () => {
     if (!testimonialId) {
       toast.error('Testimonial ID is missing!')
       return
     }
 
+    if (!validate()) {
+      toast.error('Please fill all details before saving.')
+      return
+    }
+
     const payload = {
       id: testimonialId,
-      name: formData.name || '',
-      body: formData.body || '',
-      img: formData.img || '',
-      location: formData.location || '',
+      name: (formData.name || '').trim(),
+      body: (formData.body || '').trim(),
+      img: (formData.img || '').trim(),
+      location: (formData.location || '').trim(),
       visible: Boolean(formData.visible),
     }
 
@@ -133,39 +173,71 @@ export function DataTableRowActions({ row }: { row: { original: TestimonialRow }
               <Label htmlFor='t-name'>Name</Label>
               <Input
                 id='t-name'
-                className='mt-2'
+                className={`mt-2 ${errors.name ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 value={formData.name || ''}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, name: e.target.value })
+                  if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }))
+                }}
+                aria-invalid={Boolean(errors.name)}
+                required
               />
+              {errors.name ? (
+                <p className='mt-1 text-xs text-destructive'>{errors.name}</p>
+              ) : null}
             </div>
             <div>
               <Label htmlFor='t-location'>Location</Label>
               <Input
                 id='t-location'
-                className='mt-2'
+                className={`mt-2 ${errors.location ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 value={formData.location || ''}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, location: e.target.value })
+                  if (errors.location) setErrors((prev) => ({ ...prev, location: undefined }))
+                }}
+                aria-invalid={Boolean(errors.location)}
+                required
               />
+              {errors.location ? (
+                <p className='mt-1 text-xs text-destructive'>{errors.location}</p>
+              ) : null}
             </div>
             <div>
               <Label htmlFor='t-img'>Image URL</Label>
                 <Input
                 id='t-img'
-                className='mt-2'
+                className={`mt-2 ${errors.img ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 value={formData.img || ''}
-                onChange={(e) => setFormData({ ...formData, img: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, img: e.target.value })
+                  if (errors.img) setErrors((prev) => ({ ...prev, img: undefined }))
+                }}
                 placeholder='https://...'
+                aria-invalid={Boolean(errors.img)}
+                required
               />
+              {errors.img ? (
+                <p className='mt-1 text-xs text-destructive'>{errors.img}</p>
+              ) : null}
             </div>
             <div>
               <Label htmlFor='t-body'>Testimonial</Label>
               <Textarea
                 id='t-body'
-                className='mt-2'
+                className={`mt-2 ${errors.body ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 value={formData.body || ''}
-                onChange={(e) => setFormData({ ...formData, body: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, body: e.target.value })
+                  if (errors.body) setErrors((prev) => ({ ...prev, body: undefined }))
+                }}
                 rows={5}
+                aria-invalid={Boolean(errors.body)}
+                required
               />
+              {errors.body ? (
+                <p className='mt-1 text-xs text-destructive'>{errors.body}</p>
+              ) : null}
             </div>
             <div className='mt-2 flex items-center justify-between rounded-lg border px-3 py-1'>
               <div>

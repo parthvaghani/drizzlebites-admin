@@ -28,6 +28,22 @@ export function TestimonialsPrimaryButtons() {
     visible: true,
   })
 
+  const [errors, setErrors] = useState({
+    name: '',
+    body: '',
+    img: '',
+    location: '',
+  })
+
+  const isValidUrl = (value: string) => {
+    try {
+      const url = new URL(value)
+      return url.protocol === 'http:' || url.protocol === 'https:'
+    } catch {
+      return false
+    }
+  }
+
   const { mutate: createTestimonial, isPending } = useCreateTestimonial()
 
   const handleChange = (
@@ -35,11 +51,54 @@ export function TestimonialsPrimaryButtons() {
   ) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+    // Clear error when user starts typing valid content
+    if (value.trim()) {
+      if (name === 'img') {
+        if (isValidUrl(value.trim())) {
+          setErrors((prev) => ({ ...prev, img: '' }))
+        }
+      } else {
+        setErrors((prev) => ({ ...prev, [name]: '' }))
+      }
+    }
+  }
+
+  const handleBlur = (
+    e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target
+    if (!value.trim()) {
+      const fieldLabels: Record<string, string> = {
+        name: 'Name is required',
+        body: 'Testimonial is required',
+        location: 'Location is required',
+        img: 'Image URL is required',
+      }
+      setErrors((prev) => ({ ...prev, [name]: fieldLabels[name] || 'This field is required' }))
+    } else if (name === 'img' && !isValidUrl(value.trim())) {
+      setErrors((prev) => ({ ...prev, img: '"image" must be a valid uri' }))
+    }
+  }
+
+  const validateFields = () => {
+    const newErrors = {
+      name: formData.name.trim() ? '' : 'Name is required',
+      body: formData.body.trim() ? '' : 'Testimonial is required',
+      location: formData.location.trim() ? '' : 'Location is required',
+      img: !formData.img.trim()
+        ? 'Image URL is required'
+        : isValidUrl(formData.img.trim())
+        ? ''
+        : '"img" must be a valid uri',
+    }
+    setErrors(newErrors)
+    return Object.values(newErrors).every((msg) => !msg)
   }
 
   const handleSubmit = () => {
-    if (!formData.name.trim() || !formData.body.trim()) {
-      toast.error('Name and testimonial are required')
+    const isValid = validateFields()
+    if (!isValid) {
+      toast.error('Please fill all details before saving.')
       return
     }
 
@@ -47,8 +106,8 @@ export function TestimonialsPrimaryButtons() {
       {
         name: formData.name.trim(),
         body: formData.body.trim(),
-        img: formData.img.trim() || undefined,
-        location: formData.location.trim() || undefined,
+        img: formData.img.trim(),
+        location: formData.location.trim(),
         visible: formData.visible,
       },
       {
@@ -56,6 +115,7 @@ export function TestimonialsPrimaryButtons() {
           toast.success('Testimonial created successfully!')
           queryClient.invalidateQueries({ queryKey: ['testimonials'] })
           setFormData({ name: '', body: '', img: '', location: '', visible: true })
+          setErrors({ name: '', body: '', img: '', location: '' })
           setOpenSheet(false)
         },
         onError: (error: Error) => {
@@ -85,45 +145,71 @@ export function TestimonialsPrimaryButtons() {
 
             <div className='mt-6 space-y-5'>
               <div className='space-y-2'>
-                <Label htmlFor='t-name'>Name *</Label>
+                <Label htmlFor='t-name'>Name <span className="text-red-500">*</span></Label>
                 <Input
                   id='t-name'
                   name='name'
+                  aria-invalid={!!errors.name}
+                  className={errors.name ? 'border-red-500 focus-visible:ring-red-500' : ''}
                   value={formData.name}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                 />
+                {errors.name ? (
+                  <p className='text-red-500 text-xs'>{errors.name}</p>
+                ) : null}
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='t-location'>Location</Label>
+                <Label htmlFor='t-location'>Location <span className="text-red-500">*</span></Label>
                 <Input
                   id='t-location'
                   name='location'
+                  required
+                  aria-invalid={!!errors.location}
+                  className={errors.location ? 'border-red-500 focus-visible:ring-red-500' : ''}
                   value={formData.location}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                 />
+                {errors.location ? (
+                  <p className='text-red-500 text-xs'>{errors.location}</p>
+                ) : null}
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='t-img'>Image URL</Label>
+                <Label htmlFor='t-img'>Image URL <span className="text-red-500">*</span></Label>
                 <Input
                   id='t-img'
                   name='img'
                   placeholder='https://...'
+                  required
+                  aria-invalid={!!errors.img}
+                  className={errors.img ? 'border-red-500 focus-visible:ring-red-500' : ''}
                   value={formData.img}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                 />
+                {errors.img ? (
+                  <p className='text-red-500 text-xs'>{errors.img}</p>
+                ) : null}
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='t-body'>Testimonial *</Label>
+                <Label htmlFor='t-body'>Testimonial <span className="text-red-500">*</span></Label>
                 <Textarea
                   id='t-body'
                   name='body'
+                  aria-invalid={!!errors.body}
+                  className={errors.body ? 'border-red-500 focus-visible:ring-red-500' : ''}
                   value={formData.body}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   rows={6}
                 />
+                {errors.body ? (
+                  <p className='text-red-500 text-xs'>{errors.body}</p>
+                ) : null}
               </div>
 
               <div className='flex items-center justify-between rounded-lg border px-3 py-2'>
