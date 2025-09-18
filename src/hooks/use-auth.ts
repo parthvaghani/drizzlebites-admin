@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useNavigate } from '@tanstack/react-router';
 // Import js-cookie
 import api from '@/lib/api';
+import type { AxiosRequestHeaders } from 'axios';
 import { setCookie, removeCookie } from './use-cookie';
 
 // Types
@@ -134,8 +135,8 @@ export function useGetUsers() {
 }
 export function useLogout() {
   const queryClient = useQueryClient();
-  const reset = useAuthStore((state) => state.auth.reset);
   const navigate = useNavigate();
+  const clearAuth = useAuthStore((state) => state.auth.clearAuth);
 
   return useMutation({
     mutationFn: async () => {
@@ -144,19 +145,30 @@ export function useLogout() {
       return Promise.resolve();
     },
     onSuccess: () => {
-      reset();
+      // Fully clear auth state and storage
+      clearAuth();
       queryClient.clear(); // Clear all queries
       removeCookie('admin_session');
-      navigate({ to: '/sign-in' });
+      // Ensure axios stops sending any stale Authorization header
+      const commonHeaders = (api.defaults.headers as unknown as { common: AxiosRequestHeaders }).common;
+      if (commonHeaders && 'Authorization' in commonHeaders) {
+        delete commonHeaders.Authorization;
+      }
+      // Navigate to sign-in (no hard reload to avoid bouncing back)
+      navigate({ to: '/sign-in', replace: true });
       toast.success('Logged out successfully');
     },
     onError: (error) => {
       // eslint-disable-next-line no-console
       console.error('Logout error:', error);
       // Even if logout API fails, clear local state
-      reset();
+      clearAuth();
       queryClient.clear();
-      navigate({ to: '/sign-in' });
+      const errorCommonHeaders = (api.defaults.headers as unknown as { common: AxiosRequestHeaders }).common;
+      if (errorCommonHeaders && 'Authorization' in errorCommonHeaders) {
+        delete errorCommonHeaders.Authorization;
+      }
+      navigate({ to: '/sign-in', replace: true });
     },
   });
 }

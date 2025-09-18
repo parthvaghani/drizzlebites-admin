@@ -1,4 +1,6 @@
 import axios from 'axios'
+import Cookies from 'js-cookie'
+import type { AxiosRequestHeaders } from 'axios'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
 const api = axios.create({
@@ -26,10 +28,18 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      useAuthStore.getState().auth.reset()
+      // Fully clear auth and storage on unauthorized
+      const { clearAuth } = useAuthStore.getState().auth
+      if (clearAuth) clearAuth()
+      Cookies.remove('admin_session')
+      // Avoid leaving stale header around
+      const commonHeaders = (api.defaults.headers as unknown as { common: AxiosRequestHeaders }).common
+      if (commonHeaders && 'Authorization' in commonHeaders) {
+        delete commonHeaders.Authorization
+      }
       toast.error('Session expired! Please login again.')
-      // Redirect to login page using window.location for API interceptors
-      window.location.href = '/sign-in'
+      // Force a replace navigation to sign-in
+      // window.location.replace('/sign-in')
     } else if (error.response?.status === 403) {
       toast.error('Access denied!')
     } else if (error.response?.status === 500) {

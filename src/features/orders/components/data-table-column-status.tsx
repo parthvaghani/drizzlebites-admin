@@ -43,12 +43,22 @@ export function StatusCell({ order }: { order: OrderRow; }) {
 
     const [showCancelDialog, setShowCancelDialog] = useState(false);
     const [cancelReason, setCancelReason] = useState("");
+    const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+    const [trackingLink, setTrackingLink] = useState("");
+    const [trackingNumber, setTrackingNumber] = useState("");
+    const [courierName, setCourierName] = useState("");
+    const [customMessage, setCustomMessage] = useState("");
 
     const onSelect = (next: string) => {
         if (next === order.status) return;
 
         if (next === "cancelled") {
             setShowCancelDialog(true); // open dialog instead of direct update
+            return;
+        }
+
+        if (next === "completed") {
+            setShowCompleteDialog(true);
             return;
         }
 
@@ -102,6 +112,34 @@ export function StatusCell({ order }: { order: OrderRow; }) {
                 onError: (err: unknown) => {
                     const message =
                         err instanceof Error ? err.message : "Failed to cancel order";
+                    toast.error(message);
+                },
+            }
+        );
+    };
+
+    const confirmComplete = () => {
+        updateStatus(
+            {
+                id: order._id,
+                status: "completed",
+                trackingLink: trackingLink || undefined,
+                trackingNumber: trackingNumber || undefined,
+                courierName: courierName || undefined,
+                customMessage: customMessage || undefined,
+            },
+            {
+                onSuccess: () => {
+                    toast.success("Order marked as completed");
+                    setShowCompleteDialog(false);
+                    setTrackingLink("");
+                    setTrackingNumber("");
+                    setCourierName("");
+                    setCustomMessage("");
+                },
+                onError: (err: unknown) => {
+                    const message =
+                        err instanceof Error ? err.message : "Failed to complete order";
                     toast.error(message);
                 },
             }
@@ -168,6 +206,67 @@ export function StatusCell({ order }: { order: OrderRow; }) {
                         </Button>
                         <Button onClick={confirmCancel} disabled={isPending}>
                             Confirm Cancel
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Complete order dialog */}
+            <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Complete Order</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-3">
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium">Tracking link (optional)</label>
+                            <Input
+                                value={trackingLink}
+                                onChange={(e) => setTrackingLink(e.target.value)}
+                                placeholder="https://tracking.example.com/track/ABC123"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium">Tracking number (optional)</label>
+                            <Input
+                                value={trackingNumber}
+                                type='number'
+                                onChange={(e) => setTrackingNumber(e.target.value)}
+                                placeholder="Enter tracking number"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium">Courier name (optional)</label>
+                            <Input
+                                value={courierName}
+                                onChange={(e) => setCourierName(e.target.value)}
+                                placeholder="e.g., DHL, FedEx, UPS"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium">Custom Message (optional)</label>
+                            <Input
+                                value={customMessage}
+                                onChange={(e) => setCustomMessage(e.target.value)}
+                                placeholder="e.g., Thank you for your order"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter className="mt-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setShowCompleteDialog(false);
+                                setTrackingLink("");
+                                setTrackingNumber("");
+                                setCourierName("");
+                                setCustomMessage("");
+                            }}
+                        >
+                            Close
+                        </Button>
+                        <Button onClick={confirmComplete} disabled={isPending}>
+                            Confirm Complete
                         </Button>
                     </DialogFooter>
                 </DialogContent>

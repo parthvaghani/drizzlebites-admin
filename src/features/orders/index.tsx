@@ -41,6 +41,36 @@ export default function Orders() {
             const derivedPhone = typeof userId === 'object' && userId?.phoneNumber ? userId.phoneNumber : o.phoneNumber
             const originalTotal = (o.productsDetails || []).reduce((sum, p) => sum + (p.pricePerUnit) * (p.totalUnit || 1), 0)
             const discountedTotal = (o.productsDetails || []).reduce((sum, p) => sum + (p.pricePerUnit - (p.discount || 0)) * (p.totalUnit || 1), 0)
+            const base = import.meta.env.VITE_IMAGE_BASE_URL ?? ''
+            const images: string[] = (o.productsDetails || []).flatMap((p) => {
+                const imgs = (p?.productId && Array.isArray(p.productId.images)) ? p.productId.images : []
+                return imgs
+                    .map((i: string | { url?: string }) => {
+                        if (typeof i === 'string') return `${base}${i}`
+                        if (i && typeof i.url === 'string') return `${base}${i.url}`
+                        return ''
+                    })
+                    .filter(Boolean) as string[]
+            })
+            const normalizedProductsDetails = (o.productsDetails || []).map((p) => {
+                const imgs = (p?.productId && Array.isArray(p.productId.images)) ? p.productId.images : []
+                const normImages: string[] = imgs
+                    .map((i: string | { url?: string }) => {
+                        if (typeof i === 'string') return `${base}${i}`
+                        if (i && typeof i.url === 'string') return `${base}${i.url}`
+                        return ''
+                    })
+                    .filter(Boolean) as string[]
+                return {
+                    productId: p.productId ? { _id: p.productId._id, name: p.productId.name, images: normImages } : undefined,
+                    weightVariant: p.weightVariant,
+                    weight: p.weight,
+                    pricePerUnit: p.pricePerUnit,
+                    discount: p.discount,
+                    totalUnit: p.totalUnit,
+                    _id: p._id,
+                }
+            })
             return {
                 _id: o._id,
                 userId,
@@ -48,12 +78,12 @@ export default function Orders() {
                 status: o.status,
                 paymentStatus: o.paymentStatus ?? 'unpaid',
                 createdAt: o.createdAt,
-                images: (o.productsDetails || []).flatMap((p) => (p?.productId && Array.isArray(p.productId.images)) ? p.productId.images : []),
+                images,
                 totalAmount: discountedTotal,
                 originalTotal,
                 shippingCharge: o.shippingCharge,
                 address: o.address,
-                productsDetails: o.productsDetails,
+                productsDetails: normalizedProductsDetails,
                 updatedAt: o.updatedAt ?? '',
                 cancelDetails: o.cancelDetails,
             }

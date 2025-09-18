@@ -1,12 +1,14 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useAuthStore } from '@/stores/authStore';
 
 export interface OrderProductDetail {
   productId: {
     _id: string;
     name: string;
-    images: string[];
+    images: Array<string | { url: string; }>;
   };
   weightVariant: string;
   weight: string;
@@ -113,10 +115,14 @@ export interface UpdateOrderStatusPayload {
   status?: string;
   note?: string;
   paymentStatus?: string;
+  trackingLink?: string;
+  trackingNumber?: string;
+  courierName?: string;
+  customMessage?: string;
 }
 
-const updateOrderStatusApi = async ({ id, status, paymentStatus, note }: UpdateOrderStatusPayload) => {
-  const response = await api.patch(`/orders/${id}/status`, { status, paymentStatus, note });
+const updateOrderStatusApi = async ({ id, status, paymentStatus, note, trackingLink, trackingNumber, courierName, customMessage }: UpdateOrderStatusPayload) => {
+  const response = await api.patch(`/orders/${id}/status`, { status, paymentStatus, note, trackingLink, trackingNumber, courierName, customMessage });
   return response.data;
 };
 
@@ -133,12 +139,19 @@ const updateOrderShippingChargeApi = async ({ id, shippingCharge }: UpdateOrderS
 
 export function useOrdersList(params: GetOrdersParams) {
   const { page = 1, limit = 10, search = '', status, sortBy } = params;
+  const accessToken = useAuthStore((state) => state.auth.accessToken);
   return useQuery({
     queryKey: ['orders', { page, limit, search, status, sortBy }],
     queryFn: () => getOrdersApi({ page, limit, search, status, sortBy }),
+    enabled: Boolean(accessToken),
     placeholderData: keepPreviousData,
     staleTime: 1000 * 30,
-    retry: 3,
+    retry: (failureCount, error) => {
+      if (error instanceof AxiosError && error.response?.status === 401) {
+        return false;
+      }
+      return failureCount < 3;
+    },
     refetchOnWindowFocus: false,
   });
 }

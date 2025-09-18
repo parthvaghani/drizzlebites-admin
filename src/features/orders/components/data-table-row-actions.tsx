@@ -63,6 +63,10 @@ type StatusHistoryEntry = {
   note: string | null;
   updatedBy: 'user' | 'admin';
   date: string;
+  trackingNumber?: number | null;
+  trackingLink?: string | null;
+  courierName?: string | null;
+  customMessage?: string | null;
 };
 
 type NormalizedOrder = {
@@ -173,7 +177,6 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
 
   const currentStatus = String(detail.status ?? order.status);
   const status = STATUS_VARIANTS[currentStatus as keyof typeof STATUS_VARIANTS] || 'default';
-
   const getUserDisplayName = () => {
     if (typeof detail?.userId === 'object' && detail?.userId !== null) {
       return detail?.userId.user_details?.name ||
@@ -254,6 +257,13 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
 
     const classes = getStepClasses();
 
+    // Check if this step has tracking details (for any status)
+    const hasTrackingDetails = historyEntry && (
+      historyEntry?.trackingNumber ||
+      historyEntry?.trackingLink ||
+      historyEntry?.courierName
+    );
+
     return (
       <div className="flex flex-col items-center text-center relative min-h-[120px] justify-start flex-1">
         {/* Step circle with icon */}
@@ -286,6 +296,34 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
             <span className="text-[10px] text-muted-foreground italic leading-tight">
               {historyEntry.note}
             </span>
+          )}
+
+          {/* Tracking Details - Show for any status with tracking info */}
+          {hasTrackingDetails && (
+            <div className="mt-2 space-y-1 text-[10px] text-muted-foreground">
+              {historyEntry?.trackingNumber && (
+                <div className="font-medium text-foreground">
+                  Tracking: {historyEntry.trackingNumber}
+                </div>
+              )}
+              {historyEntry?.courierName && (
+                <div>
+                  Courier: {historyEntry.courierName}
+                </div>
+              )}
+              {historyEntry?.trackingLink && (
+                <div>
+                  <a
+                    href={historyEntry.trackingLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 underline"
+                  >
+                    Track Order
+                  </a>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
@@ -415,6 +453,64 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                   </div>
                 </div>
 
+                {/* Tracking Details Section */}
+                {(() => {
+                  const trackingEntry = detail.statusHistory?.find(h =>
+                    h.trackingNumber || h.trackingLink || h.courierName || h.customMessage
+                  );
+
+                  if (!trackingEntry) return null;
+
+                  return (
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-base">Tracking Information</h3>
+                      <div className="rounded-lg border p-4 bg-blue-50 dark:bg-blue-950/20">
+                        <div className="space-y-2">
+                          {trackingEntry.trackingNumber && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Tracking Number</span>
+                              <span className="font-medium">{trackingEntry.trackingNumber}</span>
+                            </div>
+                          )}
+                          {trackingEntry.courierName && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Courier</span>
+                              <span className="font-medium">{trackingEntry.courierName}</span>
+                            </div>
+                          )}
+                          {trackingEntry.trackingLink && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Tracking Link</span>
+                              <a
+                                href={trackingEntry.trackingLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 underline font-medium"
+                              >
+                                Track Order
+                              </a>
+                            </div>
+                          )}
+                          {trackingEntry.customMessage && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Custom Message</span>
+                              <span className="font-medium">{trackingEntry.customMessage}</span>
+                            </div>
+                          )}
+                          {trackingEntry.date && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Updated</span>
+                              <span className="text-sm text-muted-foreground">
+                                {new Date(trackingEntry.date).toLocaleString('en-IN')}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Shipping Address */}
                 <div className="space-y-3">
                   <h3 className="font-semibold text-base">Shipping Address</h3>
@@ -464,7 +560,7 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                           const line = (unit - off) * qty;
                           const base = import.meta.env.VITE_IMAGE_BASE_URL ?? '';
                           const raw = (p.productId?.images?.[0] ?? '') as unknown;
-                          const path = typeof raw === 'string' ? raw : (raw && typeof (raw as { url?: unknown }).url === 'string' ? (raw as { url: string }).url : '');
+                          const path = typeof raw === 'string' ? raw : (raw && typeof (raw as { url?: unknown; }).url === 'string' ? (raw as { url: string; }).url : '');
                           const thumb = path ? `${base}${path}` : '';
 
                           return (
