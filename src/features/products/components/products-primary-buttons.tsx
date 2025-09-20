@@ -316,7 +316,7 @@ export function ProductsPrimaryButtons() {
   };
 
   return (
-    <div className='flex gap-2'>
+    <div className='flex flex-col gap-2 sm:flex-row'>
       {/* <Button variant='outline' className='space-x-1'>
         <span>Import</span> <IconDownload size={18} />
       </Button> */}
@@ -326,7 +326,7 @@ export function ProductsPrimaryButtons() {
       </Button>
 
       <Sheet open={openSheet} onOpenChange={setOpenSheet}>
-        <SheetContent className='p-0 sm:max-w-lg'>
+        <SheetContent className='p-0 w-full sm:max-w-2xl lg:max-w-3xl'>
           <div className='max-h-[calc(100vh-100px)] overflow-y-auto p-6'>
             <SheetHeader className='p-0'>
               <SheetTitle className='-pl-6 text-xl font-semibold'>
@@ -414,7 +414,7 @@ export function ProductsPrimaryButtons() {
                 {imagesError ? (
                   <p className='text-red-500 text-xs'>{imagesError}</p>
                 ) : null}
-                <div className='mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3'>
+                <div className='mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3'>
                   {productData.images.map((img, i) => (
                     <div
                       key={i}
@@ -423,7 +423,7 @@ export function ProductsPrimaryButtons() {
                       <img
                         src={img}
                         alt={`Image ${i + 1}`}
-                        className='h-24 w-full object-cover'
+                        className='h-32 w-full object-cover sm:h-24'
                       />
                       <Button
                         variant='destructive'
@@ -441,13 +441,14 @@ export function ProductsPrimaryButtons() {
               {/* Ingredients */}
               <div className='space-y-2'>
                 <Label>Ingredients*</Label>
-                <div className='flex gap-2'>
+                <div className='flex flex-col gap-2 sm:flex-row'>
                   <Input
                     value={ingredientInput}
                     onChange={(e) => setIngredientInput(e.target.value)}
                     placeholder='Add ingredient'
+                    className='flex-1'
                   />
-                  <Button type='button' onClick={handleAddIngredient}>
+                  <Button type='button' onClick={handleAddIngredient} className='w-full sm:w-auto'>
                     Add
                   </Button>
                 </div>
@@ -475,13 +476,14 @@ export function ProductsPrimaryButtons() {
               {/* Benefits */}
               <div className='space-y-2'>
                 <Label>Benefits*</Label>
-                <div className='flex gap-2'>
+                <div className='flex flex-col gap-2 sm:flex-row'>
                   <Input
                     value={benefitInput}
                     onChange={(e) => setBenefitInput(e.target.value)}
                     placeholder='Add benefit'
+                    className='flex-1'
                   />
-                  <Button type='button' onClick={handleAddBenefit}>
+                  <Button type='button' onClick={handleAddBenefit} className='w-full sm:w-auto'>
                     Add
                   </Button>
                 </div>
@@ -509,13 +511,13 @@ export function ProductsPrimaryButtons() {
               {/* Variants */}
               <div className='space-y-2'>
                 <Label>Variants</Label>
-                <div className='flex gap-2'>
+                <div className='grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5'>
                   <select
                     value={variantType}
                     onChange={(e) =>
                       setVariantType(e.target.value as 'gm' | 'kg')
                     }
-                    className='rounded border px-2'
+                    className='rounded border px-2 py-2 text-sm'
                   >
                     <option value='gm'>Gram</option>
                     <option value='kg'>Kilogram</option>
@@ -524,20 +526,25 @@ export function ProductsPrimaryButtons() {
                     placeholder='Weight'
                     value={variantWeight}
                     onChange={(e) => setVariantWeight(e.target.value)}
+                    className='sm:col-span-1'
                   />
                   <Input
                     placeholder='Price'
                     type='number'
                     value={variantPrice}
                     onChange={(e) => setVariantPrice(e.target.value)}
+                    className='sm:col-span-1'
                   />
                   <Input
                     placeholder='Discount'
                     type='number'
                     value={variantDiscount}
                     onChange={(e) => setVariantDiscount(e.target.value)}
+                    className='sm:col-span-1'
                   />
-                  <Button onClick={handleAddVariant}>Add</Button>
+                  <Button onClick={handleAddVariant} className='w-full sm:col-span-1'>
+                    Add
+                  </Button>
                 </div>
                 {productData.variants.gm.length > 0 || productData.variants.kg.length > 0 ? (
                   <div className='mt-2'>
@@ -549,26 +556,26 @@ export function ProductsPrimaryButtons() {
                         {productData.variants[type].map((v, i) => (
                           <div
                             key={i}
-                            className='mt-1 flex items-center justify-between rounded border bg-muted/50 p-2'
+                            className='mt-1 flex flex-col gap-2 rounded border bg-muted/50 p-2 sm:flex-row sm:items-center sm:justify-between'
                           >
-                            <div className='flex items-center gap-3 text-sm'>
+                            <div className='flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:gap-3'>
                               <span className='font-medium'>
                                 {v.weight}
                                 {type}
                               </span>
                               {v.discount ? (
-                                <>
+                                <div className='flex flex-wrap items-center gap-2'>
                                   <span className='line-through text-muted-foreground'>₹{v.price}</span>
                                   <span className='font-semibold'>₹{v.price - v.discount}</span>
                                   <span className='rounded bg-red-600 px-2 pt-0.5 text-xs text-white'>₹{v.discount} OFF</span>
-                                </>
+                                </div>
                               ) : (
                                 <span className='font-semibold'>₹{v.price}</span>
                               )}
                             </div>
                             <button
                               onClick={() => handleRemoveVariant(type, i)}
-                              className='text-sm font-bold text-red-500'
+                              className='self-start text-sm font-bold text-red-500 sm:self-auto'
                             >
                               ✕
                             </button>
@@ -621,18 +628,18 @@ export function ProductsPrimaryButtons() {
               </div>
             </div>
 
-            <SheetFooter className='mt-6 flex gap-2'>
+            <SheetFooter className='mt-6 flex flex-col gap-2 sm:flex-row'>
               <Button
                 variant='outline'
                 onClick={() => setOpenSheet(false)}
-                className='w-full'
+                className='w-full sm:w-auto'
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={isPending}
-                className='w-full'
+                className='w-full sm:w-auto'
               >
                 {isPending ? 'Saving...' : 'Save Product'}
               </Button>

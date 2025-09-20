@@ -45,17 +45,17 @@ export default function Products() {
       </Header>
 
       <Main>
-        <div className='mb-2 flex flex-wrap items-center justify-between space-y-2 gap-x-4'>
-          <div>
+        <div className='mb-2 flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0'>
+          <div className='flex-1'>
             <h2 className='text-2xl font-bold tracking-tight'>Products</h2>
             <p className='text-muted-foreground'>
               Manage and view all products in one place!
             </p>
           </div>
-          <div className='flex items-center gap-6'>
-            <div className='flex items-center gap-3'>
+          <div className='flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4 lg:space-x-6'>
+            <div className='flex flex-wrap items-center gap-3 sm:gap-4'>
               <div className='flex items-center gap-2'>
-                <Label htmlFor='filter-premium'>Premium</Label>
+                <Label htmlFor='filter-premium' className='text-sm'>Premium</Label>
                 <Switch
                   id='filter-premium'
                   checked={isPremium ?? false}
@@ -66,7 +66,7 @@ export default function Products() {
                 />
               </div>
               <div className='flex items-center gap-2'>
-                <Label htmlFor='filter-popular'>Popular</Label>
+                <Label htmlFor='filter-popular' className='text-sm'>Popular</Label>
                 <Switch
                   id='filter-popular'
                   checked={isPopular ?? false}
@@ -77,7 +77,9 @@ export default function Products() {
                 />
               </div>
             </div>
-            <ProductsPrimaryButtons />
+            <div className='flex-shrink-0'>
+              <ProductsPrimaryButtons />
+            </div>
           </div>
         </div>
 

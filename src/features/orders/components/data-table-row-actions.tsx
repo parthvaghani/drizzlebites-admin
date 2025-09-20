@@ -539,7 +539,9 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
               {/* Items Table */}
               <div>
                 <h3 className="font-semibold text-base mb-4">Items</h3>
-                <div className="rounded-lg border overflow-hidden">
+
+                {/* Desktop Table View */}
+                <div className="hidden lg:block rounded-lg border overflow-hidden">
                   <div className="max-h-60 overflow-auto">
                     <Table>
                       <TableHeader>
@@ -571,12 +573,12 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                                     <img
                                       src={thumb}
                                       alt={p.productId?.name || 'Product'}
-                                      className="h-10 w-10 rounded object-cover border"
+                                      className="h-10 w-10 rounded object-cover border flex-shrink-0"
                                     />
                                   )}
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{p.productId?.name || '—'}</span>
-                                    <span className="text-xs text-muted-foreground">{p.productId?._id || ''}</span>
+                                  <div className="flex flex-col min-w-0">
+                                    <span className="font-medium truncate">{p.productId?.name || '—'}</span>
+                                    <span className="text-xs text-muted-foreground truncate">{p.productId?._id || ''}</span>
                                   </div>
                                 </div>
                               </TableCell>
@@ -595,24 +597,138 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                   </div>
                 </div>
 
-                {/* Order Summary */}
+                {/* Tablet View (Medium screens) */}
+                <div className="hidden md:block lg:hidden rounded-lg border overflow-hidden">
+                  <div className="max-h-60 overflow-auto">
+                    <Table>
+                      <TableHeader>
+                        <UiTR>
+                          <TableHead>Product</TableHead>
+                          <TableHead className="w-[80px] text-center">Qty</TableHead>
+                          <TableHead className="w-[100px] text-right">Unit</TableHead>
+                          <TableHead className="w-[100px] text-right">Total</TableHead>
+                        </UiTR>
+                      </TableHeader>
+                      <TableBody>
+                        {(detail.productsDetails || []).map((p) => {
+                          const unit = Number(p.pricePerUnit || 0);
+                          const off = Number(p.discount || 0);
+                          const qty = Number(p.totalUnit || 1);
+                          const line = (unit - off) * qty;
+                          const base = import.meta.env.VITE_IMAGE_BASE_URL ?? '';
+                          const raw = (p.productId?.images?.[0] ?? '') as unknown;
+                          const path = typeof raw === 'string' ? raw : (raw && typeof (raw as { url?: unknown; }).url === 'string' ? (raw as { url: string; }).url : '');
+                          const thumb = path ? `${base}${path}` : '';
+
+                          return (
+                            <UiTR key={String(p._id || p.productId?._id || Math.random())}>
+                              <TableCell>
+                                <div className="flex items-start gap-3">
+                                  {thumb && (
+                                    <img
+                                      src={thumb}
+                                      alt={p.productId?.name || 'Product'}
+                                      className="h-12 w-12 rounded object-cover border flex-shrink-0"
+                                    />
+                                  )}
+                                  <div className="flex flex-col min-w-0">
+                                    <span className="font-medium text-sm leading-tight">{p.productId?.name || '—'}</span>
+                                    <span className="text-xs text-muted-foreground">{p.weight ? `${p.weight}${p.weightVariant || ''}` : ''}</span>
+                                    {off > 0 && (
+                                      <span className="text-xs text-red-600">-{formatINR(off)} discount</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-center font-medium">{qty}</TableCell>
+                              <TableCell className="text-right text-sm">{formatINR(unit)}</TableCell>
+                              <TableCell className="text-right font-medium">{formatINR(line)}</TableCell>
+                            </UiTR>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="block md:hidden space-y-3">
+                  <div className="max-h-60 overflow-auto">
+                    {(detail.productsDetails || []).map((p) => {
+                      const unit = Number(p.pricePerUnit || 0);
+                      const off = Number(p.discount || 0);
+                      const qty = Number(p.totalUnit || 1);
+                      const line = (unit - off) * qty;
+                      const base = import.meta.env.VITE_IMAGE_BASE_URL ?? '';
+                      const raw = (p.productId?.images?.[0] ?? '') as unknown;
+                      const path = typeof raw === 'string' ? raw : (raw && typeof (raw as { url?: unknown; }).url === 'string' ? (raw as { url: string; }).url : '');
+                      const thumb = path ? `${base}${path}` : '';
+
+                      return (
+                        <div key={String(p._id || p.productId?._id || Math.random())} className="border rounded-lg p-3 bg-background">
+                          <div className="flex gap-3">
+                            {thumb && (
+                              <img
+                                src={thumb}
+                                alt={p.productId?.name || 'Product'}
+                                className="h-14 w-14 rounded object-cover border flex-shrink-0"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm leading-tight mb-1">{p.productId?.name || '—'}</h4>
+                              <p className="text-xs text-muted-foreground mb-2">{p.productId?._id || ''}</p>
+
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Weight:</span>
+                                  <span>{p.weight ? `${p.weight}${p.weightVariant || ''}` : '—'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Qty:</span>
+                                  <span className="font-medium">{qty}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Unit Price:</span>
+                                  <span>{formatINR(unit)}</span>
+                                </div>
+                                {off > 0 && (
+                                  <div className="flex justify-between text-red-600">
+                                    <span>Discount:</span>
+                                    <span>-{formatINR(off)}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                                <span className="text-sm font-medium">Total:</span>
+                                <span className="text-sm font-bold">{formatINR(line)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Order Summary - Responsive */}
                 <div className="flex justify-end mt-4">
-                  <div className="border rounded-lg p-4 w-full max-w-sm bg-muted/20">
+                  <div className="border rounded-lg p-4 w-full sm:max-w-sm bg-muted/20">
                     <div className="space-y-2">
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-sm sm:text-base">
                         <span>Subtotal:</span>
                         <span>{formatINR(order.originalTotal ?? order.totalAmount ?? 0)}</span>
                       </div>
-                      <div className="flex justify-between text-red-600">
+                      <div className="flex justify-between text-red-600 text-sm sm:text-base">
                         <span>Discount:</span>
                         <span>- {formatINR((order.originalTotal ?? 0) - (detail.totalAmount ?? 0))}</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-sm sm:text-base">
                         <span>Shipping:</span>
                         <span>{formatINR(detail?.shippingCharge ?? 0)}</span>
                       </div>
                       <Separator />
-                      <div className="flex justify-between text-lg font-bold">
+                      <div className="flex justify-between text-base sm:text-lg font-bold">
                         <span>Total:</span>
                         <span>{formatINR((order.totalAmount ?? 0) + (detail?.shippingCharge ?? 0))}</span>
                       </div>

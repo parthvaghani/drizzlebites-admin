@@ -39,15 +39,20 @@ export default function WhatsappLeads() {
       </Header>
 
       <Main>
-        <div className='mb-2 flex flex-wrap items-center justify-between space-y-2 gap-x-4'>
-          <div>
-            <h2 className='text-2xl font-bold tracking-tight'>Whatsapp Leads</h2>
-            <p className='text-muted-foreground'>Track WhatsApp inquiries from your store.</p>
+        <div className='mb-6 space-y-4'>
+          {/* Header Section */}
+          <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0'>
+            <div>
+              <h2 className='text-2xl font-bold tracking-tight'>Whatsapp Leads</h2>
+              <p className='text-muted-foreground'>Track WhatsApp inquiries from your store.</p>
+            </div>
           </div>
-          <div className='flex items-center gap-3'>
-            <div className='flex items-center gap-2'>
+
+          {/* Filters Section */}
+          <div className='flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3'>
+            <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2'>
               <Select value={status} onValueChange={(val: 'all' | 'new' | 'contacted' | 'closed' | 'spam') => { setStatus(val); setPage(1) }}>
-                <SelectTrigger id='status-filter' className='h-8 w-[160px]'>
+                <SelectTrigger id='status-filter' className='h-9 w-full sm:w-[160px]'>
                   <SelectValue placeholder='All' />
                 </SelectTrigger>
                 <SelectContent>
@@ -59,9 +64,9 @@ export default function WhatsappLeads() {
                 </SelectContent>
               </Select>
             </div>
-            <div className='flex items-center gap-2'>
+            <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2'>
               <Select value={intent} onValueChange={(val: 'all' | 'true' | 'false') => { setIntent(val); setPage(1) }}>
-                <SelectTrigger id='intent-filter' className='h-8 w-[140px]'>
+                <SelectTrigger id='intent-filter' className='h-9 w-full sm:w-[140px]'>
                   <SelectValue placeholder='All' />
                 </SelectTrigger>
                 <SelectContent>
@@ -71,9 +76,9 @@ export default function WhatsappLeads() {
                 </SelectContent>
               </Select>
             </div>
-            <div className='flex items-center gap-2'>
+            <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2'>
               <Select value={sent} onValueChange={(val: 'all' | 'true' | 'false') => { setSent(val); setPage(1) }}>
-                <SelectTrigger id='sent-filter' className='h-8 w-[140px]'>
+                <SelectTrigger id='sent-filter' className='h-9 w-full sm:w-[140px]'>
                   <SelectValue placeholder='All' />
                 </SelectTrigger>
                 <SelectContent>
