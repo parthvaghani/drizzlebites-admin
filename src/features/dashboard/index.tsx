@@ -495,28 +495,28 @@ export default function Dashboard() {
 }
 
 const topNav = [
+  // {
+  //   title: 'Overview',
+  //   href: 'dashboard/overview',
+  //   isActive: true,
+  //   disabled: false,
+  // },
   {
-    title: 'Overview',
-    href: 'dashboard/overview',
+    title: 'Customers',
+    href: 'users',
     isActive: true,
     disabled: false,
   },
   {
-    title: 'Customers',
-    href: 'dashboard/customers',
-    isActive: false,
-    disabled: true,
-  },
-  {
     title: 'Products',
-    href: 'dashboard/products',
-    isActive: false,
-    disabled: true,
+    href: 'products',
+    isActive: true,
+    disabled: false,
   },
   {
-    title: 'Settings',
-    href: 'dashboard/settings',
-    isActive: false,
-    disabled: true,
+    title: 'Orders',
+    href: 'orders',
+    isActive: true,
+    disabled: false,
   },
 ];
