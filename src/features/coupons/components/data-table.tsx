@@ -73,9 +73,7 @@ export function DataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
-    manualPagination: true,
-    debugTable: false,
+    getFacetedUniqueValues: getFacetedUniqueValues()
   });
 
   return (
@@ -83,9 +81,9 @@ export function DataTable<TData, TValue>({
       {/* 🔍 Search + Filter Toolbar */}
       {showToolbar && (
         <DataTableToolbar
-          table={table}
-          search={search ?? ''}
-          onSearchChange={(val) => onSearchChange?.(val)}
+        table={table}
+        search={search ?? ''}
+        onSearchChange={(val) => onSearchChange?.(val)}
         />
       )}
 

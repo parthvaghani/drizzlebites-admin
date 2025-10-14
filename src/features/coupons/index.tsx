@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { ProfileDropdown } from '@/components/profile-dropdown';
@@ -21,6 +21,36 @@ export default function Coupons() {
     search,
   });
 
+  // ✅ UseMemo to avoid re-mapping on every render
+  const tableData = useMemo(() => {
+    const rawData = Array.isArray(data)
+      ? data
+      : data?.results ?? [];
+
+    return rawData.map((coupon: Coupon, index: number) => ({
+      _id: coupon._id || `coupon-${index}`,
+      couponCode: coupon.couponCode || 'N/A',
+      description: coupon.description || '',
+      termsAndConditions: coupon.termsAndConditions || '',
+      level: coupon.level || 'N/A',
+      minCartValue: coupon.minCartValue ?? 0,
+      maxDiscountValue: coupon.maxDiscountValue ?? 0,
+      minOrderQuantity: coupon.minOrderQuantity ?? 0,
+      type: coupon.type === 'unique' ? 'unique' : 'generic',
+      userType: coupon.userType,
+      maxUsage: coupon.maxUsage,
+      usageCount: coupon.usageCount,
+      isActive: coupon.isActive ?? false,
+      startDate: coupon.startDate || '-',
+      createdAt: coupon.createdAt
+        ? new Date(coupon.createdAt).toLocaleDateString()
+        : '-',
+      expiryDate: coupon.expiryDate
+        ? new Date(coupon.expiryDate).toLocaleDateString()
+        : '-',
+    }));
+  }, [data]);
+
   return (
     <TasksProvider>
       <Header fixed>
@@ -31,57 +61,26 @@ export default function Coupons() {
       </Header>
 
       <Main>
-        <div className="mb-2 flex flex-wrap items-center justify-between space-y-2 gap-x-4">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight">Coupons</h2>
             <p className="text-muted-foreground">
               Manage and view all coupons in one place!
             </p>
           </div>
-          <div className="flex items-center gap-6">
-            <CouponsPrimaryButtons />
-          </div>
+          <CouponsPrimaryButtons />
         </div>
 
-        <div className="-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-y-0 lg:space-x-12">
+        <div className="-mx-4 flex-1 overflow-auto px-4 py-1">
           {isLoading || isFetching ? (
             <p>Loading coupons...</p>
           ) : isError ? (
-            <p className="text-red-500">Error: {(error as Error).message}</p>
+            <p className="text-red-500">
+              Error: {(error as Error)?.message}
+            </p>
           ) : (
             <DataTable
-              data={(() => {
-                const payload = data ?? { results: [] };
-                const rawData = Array.isArray(payload)
-                  ? payload
-                  : payload.results ?? [];
-                // 🧾 Map coupon data for DataTable
-                return rawData.map(
-                  (coupon: Coupon, index: number) => ({
-                    _id: coupon._id || `coupon-${index}`,
-                    couponCode: coupon.couponCode || 'N/A',
-                    description: coupon.description || '',
-                    termsAndConditions: coupon.termsAndConditions || '',
-                    level: coupon.level || 'N/A',
-                    minCartValue: coupon.minCartValue ?? 0,
-                    maxDiscountValue: coupon.maxDiscountValue ?? 0,
-                    minOrderQuantity: coupon.minOrderQuantity ?? 0,
-                    // type: coupon.type || 'generic',
-                    type: coupon.type === 'unique' ? 'unique' : 'generic',
-                    userType: coupon.userType,
-                    maxUsage: coupon.maxUsage,
-                    usageCount: coupon.usageCount,
-                    isActive: coupon.isActive ?? false,
-                    startDate: coupon.startDate || '-',
-                    createdAt: coupon.createdAt
-                      ? new Date(coupon.createdAt).toLocaleDateString()
-                      : '-',
-                    expiryDate: coupon.expiryDate
-                      ? new Date(coupon.expiryDate).toLocaleDateString()
-                      : '-',
-                  })
-                );
-              })()}
+              data={tableData}
               columns={columns}
               search={search}
               onSearchChange={(val) => {
@@ -91,7 +90,7 @@ export default function Coupons() {
               pagination={{
                 page,
                 limit,
-                total: data?.total ?? undefined,
+                total: data?.total ?? 0,
               }}
               onPaginationChange={({ page: nextPage, limit: nextLimit }) => {
                 setPage(nextPage);

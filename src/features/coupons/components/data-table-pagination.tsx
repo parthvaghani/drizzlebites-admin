@@ -38,10 +38,10 @@ export function DataTablePagination<TData>({ table, pagination, onChange }: Data
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
 
   return (
-    <div className='flex items-center justify-between overflow-clip px-2' style={{ overflowClipMargin: 1 }}>
-      <div className='text-muted-foreground hidden flex-1 text-sm sm:block'>
+    <div className='flex items-center justify-end overflow-clip px-2' style={{ overflowClipMargin: 1 }}>
+      {/* <div className='text-muted-foreground hidden flex-1 text-sm sm:block'>
         {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s) selected.
-      </div>
+      </div> */}
       <div className='flex items-center sm:space-x-6 lg:space-x-8'>
         <div className='flex items-center space-x-2'>
           <p className='hidden text-sm font-medium sm:block'>Rows per page</p>

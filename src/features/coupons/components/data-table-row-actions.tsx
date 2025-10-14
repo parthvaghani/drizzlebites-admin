@@ -24,6 +24,8 @@ interface ValidationErrors {
   description?: string;
   type?: string;
   userType?: string;
+  startDate?: string;
+  expiryDate?: string;
 }
 
 interface DataTableRowActionsProps {
@@ -44,6 +46,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [formData, setFormData] = useState<Coupon>(coupon);
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [dateErrors, setDateErrors] = useState<{[key: string]: boolean}>({});
 
   // Mutations
   const { mutate: updateCoupon, isPending: isUpdating } = useUpdateCoupon();
@@ -51,7 +54,6 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
 
   // Fetch users
   const { data: usersData } = useUsersList({ limit: USERS_FETCH_LIMIT });
-  // const users: User[] = usersData?.results || [];
   const users = useMemo(() => usersData?.results || [], [usersData]);
 
   // Memoized user lookup
@@ -59,6 +61,51 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
     new Map(users.map(u => [u._id || u.id, u])),
     [users]
   );
+
+  // Date validation helper functions
+  const isValidDate = (date: Date): boolean => {
+    return date instanceof Date && !isNaN(date.getTime());
+  };
+
+  const validateDateInput = (dateString: string): boolean => {
+    if (!dateString.trim()) return true; // Empty is valid (optional field)
+
+    const date = new Date(dateString);
+    return isValidDate(date);
+  };
+
+  const formatDate = (date: string | undefined): string => {
+    if (!date || typeof date !== 'string') return '';
+
+    const dateObj = new Date(date);
+    if (!isValidDate(dateObj)) {
+      return '';
+    }
+
+    return dateObj.toISOString().split('T')[0];
+  };
+
+  const formatDateTime = (date: string | undefined): string => {
+    if (!date || typeof date !== 'string') return '—';
+
+    const dateObj = new Date(date);
+    if (!isValidDate(dateObj)) {
+      return '—';
+    }
+
+    return dateObj.toLocaleString();
+  };
+
+  const formatDateOnly = (date: string | undefined): string => {
+    if (!date || typeof date !== 'string') return '—';
+
+    const dateObj = new Date(date);
+    if (!isValidDate(dateObj)) {
+      return '—';
+    }
+
+    return dateObj.toLocaleDateString();
+  };
 
   // Validation
   const validateForm = useCallback((data: Coupon): boolean => {
@@ -75,6 +122,14 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
     }
     if (typeValue === 'unique' && !userTypeValue) {
       nextErrors.userType = 'User Type is required for unique coupons';
+    }
+
+    // Add date validation
+    if (data.startDate && !validateDateInput(data.startDate)) {
+      nextErrors.startDate = 'Invalid start date format';
+    }
+    if (data.expiryDate && !validateDateInput(data.expiryDate)) {
+      nextErrors.expiryDate = 'Invalid expiry date format';
     }
 
     setErrors(nextErrors);
@@ -137,6 +192,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const handleEditOpen = useCallback(() => {
     setFormData(coupon);
     setErrors({});
+    setDateErrors({});
     setEditOpen(true);
   }, [coupon]);
 
@@ -162,14 +218,40 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
     setFormData(prev => ({ ...prev, [field]: value }));
   }, []);
 
-  const formatDate = (date: string | undefined) =>
-    date ? new Date(date).toISOString().split('T')[0] : '';
+  // Enhanced date input handler with error handling
+  const handleDateChange = useCallback((field: keyof Coupon, value: string) => {
+    // Clear any previous error for this field
+    setDateErrors(prev => ({ ...prev, [field]: false }));
 
-  const formatDateTime = (date: string | undefined) =>
-    date ? new Date(date).toLocaleString() : '—';
+    try {
+      if (value && !validateDateInput(value)) {
+        setDateErrors(prev => ({ ...prev, [field]: true }));
+        return;
+      }
+      updateField(field, value);
+    } catch {
+      setDateErrors(prev => ({ ...prev, [field]: true }));
+    }
+  }, [updateField]);
 
-  const formatDateOnly = (date: string | undefined) =>
-    date ? new Date(date).toLocaleDateString() : '—';
+  // Enhanced date input rendering component
+  const renderDateInput = (label: string, value: string | undefined, field: keyof Coupon) => (
+    <div className='space-y-2'>
+      <Label>{label}</Label>
+      <Input
+        type='date'
+        value={formatDate(value)}
+        onChange={(e) => handleDateChange(field, e.target.value)}
+        className={dateErrors[field] ? 'border-red-500' : ''}
+      />
+      {dateErrors[field] && (
+        <p className='mt-1 text-xs text-destructive'>Invalid date format</p>
+      )}
+      {errors[field as keyof ValidationErrors] && (
+        <p className='mt-1 text-xs text-destructive'>{errors[field as keyof ValidationErrors]}</p>
+      )}
+    </div>
+  );
 
   return (
     <div className='flex items-center justify-center gap-2'>
@@ -231,23 +313,8 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
             </div>
 
             <div className='grid grid-cols-2 gap-4'>
-              <div className='space-y-2'>
-                <Label>Start Date</Label>
-                <Input
-                  type='date'
-                  value={formatDate(formData.startDate)}
-                  onChange={(e) => updateField('startDate', e.target.value)}
-                />
-              </div>
-
-              <div className='space-y-2'>
-                <Label>Expiry Date</Label>
-                <Input
-                  type='date'
-                  value={formatDate(formData.expiryDate)}
-                  onChange={(e) => updateField('expiryDate', e.target.value)}
-                />
-              </div>
+              {renderDateInput('Start Date', formData.startDate, 'startDate')}
+              {renderDateInput('Expiry Date', formData.expiryDate, 'expiryDate')}
             </div>
 
             <div className='grid grid-cols-2 gap-4'>

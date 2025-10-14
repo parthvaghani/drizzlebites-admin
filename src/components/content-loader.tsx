@@ -30,7 +30,7 @@ export function ContentLoader({ active, className }: ContentLoaderProps) {
                     alt="Logo"
                     className="h-18 w-18 object-contain animate-spin"
                 />
-                <div className="text-2xl font-bold text-[#257112]">Aavkar Mukhvas</div>
+                <div className="text-2xl font-bold text-[#257112]">Aavkar Mukhwas</div>
             </div>
         </div>
     );
