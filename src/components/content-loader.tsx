@@ -28,7 +28,7 @@ export function ContentLoader({ active, className }: ContentLoaderProps) {
                 <img
                     src="/images/logo.png"
                     alt="Logo"
-                    className="h-18 w-18 object-contain animate-spin"
+                    className="h-18 w-18 object-contain animate-bounce"
                 />
                 <div className="text-2xl font-bold text-[#257112]">Aavkar Mukhwas</div>
             </div>
