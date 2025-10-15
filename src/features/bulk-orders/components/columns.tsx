@@ -61,7 +61,7 @@ function OrderDetailsDialog({ order }: { order: BulkOrderRow; }) {
                     <Eye className="h-4 w-4" />
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-1/2 max-h-[80vh] overflow-y-auto">
+            <DialogContent className="max-w-auto sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] xl:max-w-[60vw] max-h-[80vh] overflow-y-auto" showCloseButton={false}>
                 <DialogHeader>
                     <DialogTitle>Order Details</DialogTitle>
                     <DialogDescription>
@@ -75,7 +75,7 @@ function OrderDetailsDialog({ order }: { order: BulkOrderRow; }) {
                             <CardTitle>Customer Information</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <p className="text-sm font-medium text-muted-foreground">Full Name</p>
                                     <p className="text-sm">{order.fullName}</p>
@@ -112,9 +112,9 @@ function OrderDetailsDialog({ order }: { order: BulkOrderRow; }) {
                         <CardContent>
                             <div className="space-y-4">
                                 {order.products.map((product) => (
-                                    <div key={product._id} className="flex items-center space-x-4 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                                    <div key={product._id} className="flex items-center space-x-3 sm:space-x-4 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
                                         {product.images && product.images.length > 0 && (
-                                            <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden shadow-sm">
+                                            <div className="flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden shadow-sm">
                                                 <img
                                                     src={`${base}${product.images[0].url}`}
                                                     alt={product.name}

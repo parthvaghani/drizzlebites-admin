@@ -51,15 +51,15 @@ export const columns: ColumnDef<PartnershipRequestRow>[] = [
             return <div className="text-sm">{company || '-'}</div>;
         },
     },
-    {
-        accessorKey: 'status',
-        header: 'Status',
-        cell: ({ row }) => {
-            const status = row.getValue('status') as string;
-            const variant = status === 'approved' ? 'default' : status === 'rejected' ? 'destructive' : 'secondary';
-            return <Badge variant={variant}>{status}</Badge>;
-        },
-    },
+    // {
+    //     accessorKey: 'status',
+    //     header: 'Status',
+    //     cell: ({ row }) => {
+    //         const status = row.getValue('status') as string;
+    //         const variant = status === 'approved' ? 'default' : status === 'rejected' ? 'destructive' : 'secondary';
+    //         return <Badge variant={variant}>{status}</Badge>;
+    //     },
+    // },
     {
         accessorKey: 'createdAt',
         header: 'Created At',
