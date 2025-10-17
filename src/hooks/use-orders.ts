@@ -208,4 +208,38 @@ export function useDownloadInvoice() {
     mutationFn: downloadInvoiceApi,
   });
 }
+// POS Order Creation
+export interface POSOrderPayload {
+  cart: Array<{
+    productId: string;
+    weightVariant: string;
+    weight: string;
+    totalProduct: number;
+  }>;
+  address: {
+    addressLine1: string;
+    addressLine2: string;
+    city: string;
+    state: string;
+    zip: string;
+  };
+  phoneNumber: string;
+}
+
+const createPOSOrderApi = async (payload: POSOrderPayload) => {
+  const response = await api.post('/orders/pos', payload);
+  return response.data;
+};
+
+// Mutation hook to create POS order
+export function useCreatePOSOrder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createPOSOrderApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+}
+
 

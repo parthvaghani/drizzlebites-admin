@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow as UiTR } from '@/components/ui/table';
 import { useIdByOrder, useUpdateOrderShippingCharge, useDownloadInvoice, type Order } from '@/hooks/use-orders';
-import { ShoppingCart, CheckCircle2, Package, XCircle, Hourglass, PackageCheck, Edit2, Save, X, RefreshCcw, CreditCard, Download } from 'lucide-react';
+import { ShoppingCart, CheckCircle2, Package, XCircle, Hourglass, PackageCheck, Edit2, Save, X, Download } from 'lucide-react';
 import { ContentLoader } from '@/components/content-loader';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';

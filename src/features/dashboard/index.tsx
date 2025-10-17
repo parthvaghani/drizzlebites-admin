@@ -17,8 +17,10 @@ import type { Order } from '@/hooks/use-orders';
 import DateRangePicker from '@/components/date-range-picker';
 import type { DateRange } from 'react-day-picker';
 import { useOrdersList } from '@/hooks/use-orders';
-import { ClockArrowDown, HandCoins, IndianRupee, PackageOpen, PackageCheck, XCircle } from 'lucide-react';
+import { ClockArrowDown, HandCoins, IndianRupee, PackageOpen, PackageCheck, XCircle, Monitor } from 'lucide-react';
 import { RecentSales } from './components/recent-sales';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from '@tanstack/react-router';
 
 
 function formatDate(date: Date): string {
@@ -31,6 +33,7 @@ function formatDate(date: Date): string {
 
 export default function Dashboard() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const navigate = useNavigate();
   const { data: placedOrdersData, isLoading: isPlacedLoading } = useOrdersList({ page: 1, limit: 1, status: 'placed' });
   const { data: deliveredOrdersData, isLoading: isDeliveredLoading } = useOrdersList({ page: 1, limit: 1, status: 'delivered' });
   const { data: cancelledOrdersData, isLoading: isCancelledLoading } = useOrdersList({ page: 1, limit: 1, status: 'cancelled' });
@@ -361,6 +364,13 @@ export default function Dashboard() {
                 : ''}
             </span>
           </div>
+          <Button
+            onClick={() => navigate({ to: '/pos' })}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            <Monitor className="w-4 h-4 mr-2" />
+            Open POS
+          </Button>
         </div>
         <Tabs
           orientation='vertical'
