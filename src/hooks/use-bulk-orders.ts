@@ -114,6 +114,13 @@ const deleteBulkOrderApi = async (id: string) => {
   return response.data
 }
 
+const downloadSummaryApi = async (id: string) => {
+  const response = await api.get(`/bulk-orders/${id}/summary`, {
+    responseType: 'blob',
+  })
+  return response.data
+}
+
 export function useUpdateBulkOrder() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -131,5 +138,11 @@ export function useDeleteBulkOrder() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bulk-orders'] })
     },
+  })
+}
+
+export function useDownloadBulkOrderSummary() {
+  return useMutation({
+    mutationFn: downloadSummaryApi,
   })
 }

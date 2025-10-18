@@ -1,9 +1,9 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash2, Eye } from 'lucide-react';
+import { Trash2, Eye, Download } from 'lucide-react';
 import { format } from 'date-fns';
-import { useDeleteBulkOrder } from '@/hooks/use-bulk-orders';
+import { useDeleteBulkOrder, useDownloadBulkOrderSummary } from '@/hooks/use-bulk-orders';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import {
@@ -199,6 +199,7 @@ export const columns: ColumnDef<BulkOrderRow>[] = [
         cell: ({ row }) => {
             const bulkOrder = row.original;
             const deleteBulkOrder = useDeleteBulkOrder();
+            const downloadSummary = useDownloadBulkOrderSummary();
 
             const handleDelete = async () => {
                 try {
@@ -209,9 +210,36 @@ export const columns: ColumnDef<BulkOrderRow>[] = [
                 }
             };
 
+            const handleDownload = async () => {
+                try {
+                    const blob = await downloadSummary.mutateAsync(bulkOrder._id);
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `bulk-order-${bulkOrder._id}.pdf`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+                    toast.success('Summary downloaded successfully');
+                } catch (error) {
+                    toast.error('Failed to download summary');
+                }
+            };
+
             return (
                 <div className="flex items-center space-x-2">
                     <OrderDetailsDialog order={bulkOrder} />
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleDownload}
+                        disabled={downloadSummary.isPending}
+                        className="h-8 w-8 p-0"
+                    >
+                        <span className="sr-only">Download summary</span>
+                        <Download className="h-4 w-4" />
+                    </Button>
                     <Button
                         variant="ghost"
                         size="sm"
