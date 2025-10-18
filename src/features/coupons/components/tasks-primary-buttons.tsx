@@ -31,6 +31,7 @@ export function CouponsPrimaryButtons() {
     maxUsagePerUser: 1,           // Add this
     firstOrderOnly: false,         // Add this
     isActive: true,
+    isPOSOnly: false,
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string; }>({});
@@ -92,6 +93,7 @@ export function CouponsPrimaryButtons() {
       maxDiscountValue: Number(couponData.maxDiscountValue),
       minOrderQuantity: Number(couponData.minOrderQuantity),
       maxUsage: Number(couponData.maxUsage),
+      couponType: couponData.isPOSOnly ? "pos" : "normal",
     },
       {
         onSuccess: () => {
@@ -113,6 +115,7 @@ export function CouponsPrimaryButtons() {
             maxUsagePerUser: 1,           // Add this
             firstOrderOnly: false,         // Add this
             isActive: true,
+            isPOSOnly: false,
           });
           setOpenSheet(false);
         },
@@ -355,6 +358,20 @@ export function CouponsPrimaryButtons() {
                 checked={couponData.isActive}
                 onCheckedChange={(val) =>
                   setCouponData({ ...couponData, isActive: val })
+                }
+              />
+            </div>
+            <div className="flex items-center justify-between border rounded-lg px-3 py-2">
+              <div>
+                <Label className="text-sm font-medium">POS Only</Label>
+                <p className="text-xs text-muted-foreground">
+                  Toggle to enable or disable the POS only coupon.
+                </p>
+              </div>
+              <Switch
+                checked={couponData.isPOSOnly}
+                onCheckedChange={(val) =>
+                  setCouponData({ ...couponData, isPOSOnly: val })
                 }
               />
             </div>

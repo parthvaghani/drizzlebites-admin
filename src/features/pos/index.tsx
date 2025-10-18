@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useProductCategoriesList } from '@/hooks/use-categories';
 import { useProductsList } from '@/hooks/use-products';
 import { useCreatePOSOrder } from '@/hooks/use-orders';
@@ -12,6 +12,8 @@ import { useLogout } from '@/hooks/use-auth';
 import { useNavigate } from '@tanstack/react-router';
 import { AddressModal } from '@/components/address-modal';
 import { toast } from 'sonner';
+import { Coupon, useApplyPOSCoupon, usePOSCoupons } from '@/hooks/use-coupons';
+import { useAuthStore } from '@/stores/authStore';
 
 interface Product {
     _id: string;
@@ -33,6 +35,26 @@ interface Category {
     description?: string;
     pricingEnabled?: boolean;
 }
+interface CouponResponse {
+    data?: {
+        couponCode: string;
+        couponId: string;
+        percentage: string;
+        discount: number;
+    };
+}
+
+interface PricingData {
+    unitPrice: number;
+    unitDiscount: number;
+    quantity: number;
+}
+
+interface OrderTotals {
+    subtotal: number;
+    totalDiscount: number;
+    grandTotal: number;
+}
 
 export default function POSScreen() {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -42,6 +64,22 @@ export default function POSScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [expandedCoupons, setExpandedCoupons] = useState<Set<string>>(new Set());
+    const { data: couponsData, isLoading: couponsLoading } = usePOSCoupons();
+    const applyCouponMutation = useApplyPOSCoupon();
+    const user = useAuthStore((state) => state.auth.user);
+    const fetchUser = useAuthStore((state) => state.auth.fetchUser);
+    const [couponResponse, setCouponResponse] = useState<CouponResponse | null>(null);
+    const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+
+    // Fetch user data on component mount if not already loaded
+    useEffect(() => {
+        if (!user) {
+            fetchUser();
+        }
+    }, [user, fetchUser]);
+
+    // console.log('couponsData', user)
 
     const navigate = useNavigate();
     const { mutate: logout } = useLogout();
@@ -62,7 +100,7 @@ export default function POSScreen() {
     });
 
     const categories: Category[] = categoriesData?.results || [];
-    const allProducts = productsData?.results || [];
+    const allProducts = useMemo(() => productsData?.results || [], [productsData?.results]);
 
     // Group products by category
     const productsByCategory = allProducts.reduce((acc, product) => {
@@ -129,12 +167,6 @@ export default function POSScreen() {
         ));
     };
 
-    const getTotalPrice = () => {
-        return cart.reduce((total, item) => {
-            const price = item.variant?.price || 0;
-            return total + (price * item.quantity);
-        }, 0);
-    };
 
     const getDiscountedPrice = (item: { product: Product; quantity: number; variant?: { weight: string; price: number; }; }) => {
         if (!item.variant) return 0;
@@ -165,11 +197,35 @@ export default function POSScreen() {
         }, 0);
     };
 
+    const getTotalPrice = () => {
+        return cart.reduce((total, item) => {
+            const price = item.variant?.price || 0;
+            return total + (price * item.quantity);
+        }, 0);
+    };
+
     const getFinalTotal = () => {
         return cart.reduce((total, item) => {
             const discountedPrice = getDiscountedPrice(item);
             return total + (discountedPrice * item.quantity);
         }, 0);
+    };
+
+    // Calculate coupon discount
+    const getCouponDiscount = () => {
+        if (!couponResponse || !appliedCoupon) return 0;
+
+        const subtotal = getFinalTotal();
+        const discount = couponResponse.data?.discount ?? 0;
+
+        return Math.min(discount, subtotal); // Don't allow negative totals
+    };
+
+    // Remove applied coupon
+    const removeAppliedCoupon = () => {
+        setAppliedCoupon(null);
+        setCouponResponse(null);
+        toast.success('Coupon removed successfully!');
     };
 
     const handleLogout = () => {
@@ -202,7 +258,7 @@ export default function POSScreen() {
 
                     // Check in gm variants
                     if (product.variants?.gm) {
-                        variantData = product.variants.gm.find((v: { weight: string }) => v.weight === variantWeight);
+                        variantData = product.variants.gm.find((v: { weight: string; }) => v.weight === variantWeight);
                         if (variantData) {
                             type = 'gm';
                         }
@@ -210,7 +266,7 @@ export default function POSScreen() {
 
                     // Check in kg variants if not found in gm
                     if (!type && product.variants?.kg) {
-                        variantData = product.variants.kg.find((v: { weight: string }) => v.weight === variantWeight);
+                        variantData = product.variants.kg.find((v: { weight: string; }) => v.weight === variantWeight);
                         if (variantData) {
                             type = 'kg';
                         }
@@ -251,6 +307,12 @@ export default function POSScreen() {
             }),
             address,
             phoneNumber,
+            // Include coupon information if applied
+            ...(appliedCoupon && couponResponse && {
+                couponId: appliedCoupon._id,
+                discountAmount: getCouponDiscount(),
+                discountPercentage: couponResponse.data?.percentage ?? 0,
+            }),
         };
 
         createPOSOrder(orderPayload, {
@@ -258,6 +320,8 @@ export default function POSScreen() {
                 toast.success('Order placed successfully!');
                 setCart([]);
                 setSelectedVariants({});
+                setAppliedCoupon(null);
+                setCouponResponse(null);
                 setIsAddressModalOpen(false);
             },
             onError: (error: unknown) => {
@@ -432,6 +496,180 @@ export default function POSScreen() {
             </Card>
         );
     };
+
+    const toggleCouponDetails = (couponId: string) => {
+        setExpandedCoupons((prev) => {
+            const newSet = new Set(prev);
+            if (newSet.has(couponId)) {
+                newSet.delete(couponId);
+            } else {
+                newSet.add(couponId);
+            }
+            return newSet;
+        });
+    };
+
+    const priceMap = useMemo(() => {
+        const map = new Map<string, { unitPrice: number; finalUnitPrice: number; unitDiscount: number; }>();
+        for (const it of cart) {
+            const info = allProducts.find((p) => p._id === it.product._id);
+            const gm = Array.isArray(info?.variants?.gm) ? info?.variants?.gm || [] : [];
+            const kg = Array.isArray(info?.variants?.kg) ? info?.variants?.kg || [] : [];
+            const all: { weight: string; price: number; discount?: number; }[] = [...gm, ...kg];
+            const v = all.find((x) => x.weight === it.variant?.weight);
+            const unitPrice = v?.price ?? 0;
+            const unitDiscount = v?.discount ?? 0;
+            const finalUnitPrice = Math.max(0, unitPrice - unitDiscount);
+            map.set(it.product._id, { unitPrice, finalUnitPrice, unitDiscount });
+        }
+        return map;
+    }, [cart, allProducts]);
+
+    const subtotalBeforeDiscountForCart = useMemo(
+        () =>
+            cart.reduce(
+                (sum, it) => sum + (priceMap.get(it.product._id)?.finalUnitPrice || 0) * (it.quantity || 1),
+                0
+            ),
+        [cart, priceMap]
+    );
+
+    const handleApplyCoupon = (coupon: Coupon) => {
+        applyCouponMutation.mutate(
+            {
+                couponCode: coupon.couponCode,
+                userId: user?._id as string,
+                orderQuantity: cart.length,
+                cartValue: getFinalTotal(),
+                level: 'order',
+            },
+            {
+                onSuccess: (data) => {
+                    toast.success('Coupon applied successfully!');
+                    setCouponResponse(data as CouponResponse);
+                    setAppliedCoupon(coupon);
+                },
+                onError: (error: unknown) => {
+                    // console.log('error', error)
+                    const message = error && typeof error === 'object' && 'response' in error &&
+                        error.response && typeof error.response === 'object' && 'data' in error.response &&
+                        error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data
+                        ? (error.response.data.message as string)
+                        : "Something went wrong";
+                    toast.error(message);
+                }
+            }
+        );
+    };
+
+    const calculateOrderTotals = (
+        items: { _id: string; }[],
+        pricingById: Map<string, PricingData>
+    ): OrderTotals => {
+        return (items || []).reduce(
+            (totals, item) => {
+                const pricing = pricingById.get(item._id);
+                const itemSubtotal = (pricing?.unitPrice ?? 0) * (pricing?.quantity ?? 0);
+                const itemDiscount = (pricing?.unitDiscount ?? 0) * (pricing?.quantity ?? 0);
+
+                return {
+                    subtotal: totals.subtotal + itemSubtotal,
+                    totalDiscount: totals.totalDiscount + itemDiscount,
+                    grandTotal: totals.grandTotal + (itemSubtotal - itemDiscount),
+                };
+            },
+            { subtotal: 0, totalDiscount: 0, grandTotal: 0 }
+        );
+    };
+
+    const pricingById = useMemo(() => {
+        const out = new Map<
+            string,
+            {
+                unitPrice: number;
+                unitDiscount: number;
+                finalUnitPrice: number;
+                lineTotal: number;
+                quantity: number;
+            }
+        >();
+        for (const item of cart || []) {
+            const { gm, kg } = item.product.variants || {};
+            const gmArr = Array.isArray(gm) ? gm : [];
+            const kgArr = Array.isArray(kg) ? kg : [];
+            const all = [...gmArr, ...kgArr];
+            const variant = all.find((v) => v.weight === item.variant?.weight);
+            const unitPrice = variant?.price ?? 0;
+            const unitDiscount = variant?.discount ?? 0;
+            const finalUnitPrice = Math.max(0, unitPrice - unitDiscount);
+            const quantity = item.quantity ?? 1;
+            const lineTotal = finalUnitPrice * quantity;
+            out.set(item.product._id, { unitPrice, unitDiscount, finalUnitPrice, lineTotal, quantity });
+        }
+        return out;
+    }, [cart]);
+
+    const orderTotals = calculateOrderTotals(cart.map(item => ({ _id: item.product._id })), pricingById);
+    // const totalDiscount = (couponResponse?.discount ?? 0) + orderTotals.totalDiscount;
+
+    useEffect(() => {
+        if (appliedCoupon && user) {
+            applyCouponMutation.mutate(
+                {
+                    couponCode: appliedCoupon.couponCode,
+                    userId: (appliedCoupon.userType || user._id) as string,
+                    orderQuantity: cart.length,
+                    cartValue: getFinalTotal(),
+                    level: appliedCoupon.level as string,
+                },
+                {
+                    onSuccess: (data) => {
+                        setCouponResponse(data as CouponResponse);
+                    },
+                    onError: (error: unknown) => {
+                        // Coupon became invalid - clear it
+                        setAppliedCoupon(null);
+                        setCouponResponse(null);
+
+                        if (error) {
+                            const message = error && typeof error === 'object' && 'response' in error &&
+                        error.response && typeof error.response === 'object' && 'data' in error.response &&
+                        error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data
+                        ? (error.response.data.message as string)
+                        : "Coupon no longer valid for current cart";
+                    toast.error(message);
+                        }
+                    }
+                }
+            );
+        }
+    }, [orderTotals.subtotal, appliedCoupon?.couponCode]);
+
+    const subtotalBeforeDiscount = useMemo(
+        () =>
+            cart.reduce(
+                (sum, it) => sum + (priceMap.get(it.product._id)?.finalUnitPrice || 0) * (it.quantity || 1),
+                0
+            ),
+        [cart, priceMap]
+    );
+
+    const totalDiscount = useMemo(() => {
+        let discount = 0;
+
+        for (const it of cart) {
+            const p = priceMap.get(it.product._id) as { unitDiscount: number; };
+            const qty = it.quantity || 1;
+            discount += (p?.unitDiscount || 0) * qty;
+        }
+
+        discount += couponResponse?.data?.discount ?? 0;
+
+        return discount;
+    }, [cart, priceMap, couponResponse]);
+
+    const subtotalAfterDiscountForCart = subtotalBeforeDiscountForCart - totalDiscount;
+    const formatCurrency = (amount: number) => `₹${amount.toLocaleString("en-IN")}`;
 
     return (
         <div className="h-screen w-screen bg-gray-50 flex flex-col overflow-y-auto">
@@ -850,6 +1088,332 @@ export default function POSScreen() {
                         )}
                     </div>
 
+                    {/* 💸 UPDATED: Enhanced Coupon Section with NEW VALIDATIONS */}
+                    {cart.length > 0 && (
+                        <div className="!m-2">
+                            <div className="text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2 !text-center">
+                                <span>Available Coupons</span>
+                            </div>
+
+                            <div className="space-y-2">
+                                {couponsLoading ? (
+                                    <div className="text-center py-4 text-gray-500 text-sm">
+                                        Loading coupons...
+                                    </div>
+                                ) : couponsData?.results && couponsData.results.length > 0 ? (
+                                    couponsData.results
+                                        .filter((coupon: Coupon) => {
+                                            const isExpired = coupon.expiryDate && new Date(coupon.expiryDate) < new Date();
+                                            const isUsageLimitReached = coupon?.usageCount && coupon.maxUsage && coupon.usageCount >= coupon.maxUsage;
+
+                                            // NEW: Check firstOrderOnly validation
+                                            const isFirstOrderViolation = coupon.firstOrderOnly && user?._id;
+
+                                            // NEW: Check maxUsagePerUser validation
+                                            const isUserLimitReached = coupon?.maxUsagePerUser &&
+                                                (coupon?.usageCount ?? 0) >= coupon?.maxUsagePerUser;
+
+                                            // Only show active, non-expired coupons with remaining usage
+                                            return !isExpired &&
+                                                !isUsageLimitReached &&
+                                                !isFirstOrderViolation &&
+                                                !isUserLimitReached &&
+                                                coupon.isActive;
+                                        })
+                                        .map((coupon: Coupon) => {
+                                            const isNotStarted = coupon.startDate && new Date(coupon.startDate) > new Date();
+                                            const isMinCartNotMet = coupon?.minCartValue && subtotalBeforeDiscount < coupon.minCartValue;
+                                            const isMinQuantityNotMet = coupon?.minOrderQuantity && cart.length < coupon.minOrderQuantity;
+                                            const showDetails = expandedCoupons.has(coupon._id);
+                                            const isApplied = appliedCoupon?._id === coupon._id;
+                                            // NEW: Additional validation checks
+                                            const isFirstOrderViolation = coupon.firstOrderOnly && user?._id;
+                                            const isUserLimitReached = coupon.maxUsagePerUser &&
+                                                (coupon?.usageCount ?? 0) >= coupon?.maxUsagePerUser;
+
+                                            const canApply = !isNotStarted &&
+                                                !isMinCartNotMet &&
+                                                !isMinQuantityNotMet &&
+                                                !isFirstOrderViolation &&
+                                                !isUserLimitReached;
+
+                                            return (
+                                                <div
+                                                    key={coupon._id}
+                                                    className={`rounded-lg overflow-hidden transition-all duration-200 ${isApplied
+                                                        ? "border-2 border-primary shadow-lg"
+                                                        : canApply
+                                                            ? "border-none hover:shadow-md"
+                                                            : "border border-gray-200 opacity-60"
+                                                        }`}
+                                                >
+                                                    {/* Coupon Card with Gradient Background */}
+                                                    <div
+                                                        className={`relative ${isApplied
+                                                            ? "bg-gradient-to-r from-primary/10 via-primary/5 to-transparent"
+                                                            : canApply
+                                                                ? "bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50"
+                                                                : "bg-gray-50"
+                                                            }`}
+                                                    >
+                                                        {/* Decorative Pattern */}
+                                                        <div className="absolute inset-0 opacity-10">
+                                                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary rounded-full blur-3xl"></div>
+                                                            <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500 rounded-full blur-3xl"></div>
+                                                        </div>
+
+                                                        {/* Main Content */}
+                                                        <div className="relative flex items-center gap-2 p-2 sm:p-3">
+                                                            {/* Left Icon/Badge */}
+                                                            <div
+                                                                className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-lg flex items-center justify-center ${isApplied
+                                                                    ? "bg-primary text-white"
+                                                                    : canApply
+                                                                        ? "bg-gradient-to-br from-orange-400 to-pink-500 text-white"
+                                                                        : "bg-gray-200 text-gray-400"
+                                                                    }`}
+                                                            >
+                                                                <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 100-4V6z" />
+                                                                </svg>
+                                                            </div>
+
+                                                            {/* Coupon Details */}
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-start justify-between gap-2">
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                                            <div className="font-bold text-sm sm:text-base text-gray-900 tracking-wide">
+                                                                                {coupon.couponCode}
+                                                                            </div>
+                                                                            {isNotStarted && (
+                                                                                <span className="text-[9px] sm:text-[10px] bg-orange-500 text-white px-2 py-0.5 rounded-full font-medium">
+                                                                                    Coming Soon
+                                                                                </span>
+                                                                            )}
+                                                                            {isApplied && (
+                                                                                <span className="text-[9px] sm:text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full font-medium animate-pulse">
+                                                                                    ✓ Active
+                                                                                </span>
+                                                                            )}
+                                                                            {/* NEW: First Order Only Badge */}
+                                                                            {/* {coupon.firstOrderOnly && (
+                                                                                        <span className="text-[9px] sm:text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-medium">
+                                                                                            First Order Only
+                                                                                        </span>
+                                                                                    )} */}
+                                                                        </div>
+                                                                        <div className="text-gray-600 text-[10px] sm:text-xs mt-0.5 line-clamp-1">
+                                                                            {coupon.description}
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Action Buttons */}
+                                                                    <div className="flex items-center gap-1">
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            className="h-7 sm:h-8 text-[10px] sm:text-xs px-2 text-primary hover:text-primary hover:bg-primary/10"
+                                                                            onClick={() => toggleCouponDetails(coupon._id)}
+                                                                        >
+                                                                            {showDetails ? "Less ▲" : "More ▼"}
+                                                                        </Button>
+                                                                        <Button
+                                                                            variant={isApplied ? "default" : "outline"}
+                                                                            size="sm"
+                                                                            className={`h-7 sm:h-8 text-[10px] sm:text-xs px-3 font-semibold ${isApplied
+                                                                                ? "bg-primary text-white"
+                                                                                : "bg-white hover:bg-primary hover:text-white border-primary text-primary"
+                                                                                }`}
+                                                                            onClick={() => handleApplyCoupon(coupon)}
+                                                                            disabled={applyCouponMutation.isPending || !canApply || isApplied}
+                                                                        >
+                                                                            {isApplied ? "✓ Applied" : "Apply"}
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Dashed Border Separator */}
+                                                        {showDetails && (
+                                                            <div className="relative px-2">
+                                                                <div className="border-t-2 border-dashed border-gray-300"></div>
+                                                                {/* Left Circle */}
+                                                                <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full border-2 border-gray-200"></div>
+                                                                {/* Right Circle */}
+                                                                <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full border-2 border-gray-200"></div>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Expandable Details */}
+                                                        {showDetails && (
+                                                            <div className="relative px-3 sm:px-4 pb-3 sm:pb-4 pt-3">
+                                                                <div className="space-y-2">
+                                                                    {/* Validity Period with Icon */}
+                                                                    <div className="flex items-center gap-2 text-[10px] sm:text-xs">
+                                                                        <div>
+                                                                            <span className="font-semibold text-gray-700">Validity: </span>
+                                                                            <span className="text-gray-600">
+                                                                                {coupon.startDate && new Date(coupon.startDate).toLocaleDateString('en-IN', {
+                                                                                    day: 'numeric',
+                                                                                    month: 'short',
+                                                                                    year: 'numeric'
+                                                                                })}{' '}
+                                                                                -{' '}
+                                                                                {coupon.expiryDate && new Date(coupon.expiryDate).toLocaleDateString('en-IN', {
+                                                                                    day: 'numeric',
+                                                                                    month: 'short',
+                                                                                    year: 'numeric'
+                                                                                })}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Conditions with Visual Indicators */}
+                                                                    <div className="space-y-1.5">
+                                                                        <div className="flex items-center gap-1 text-[10px] sm:text-xs font-semibold text-gray-700">
+                                                                            <span>Conditions:</span>
+                                                                        </div>
+
+                                                                        {/* NEW: First Order Only Condition */}
+                                                                        {coupon.firstOrderOnly && (
+                                                                            <div
+                                                                                className={`flex items-center gap-2 text-[10px] sm:text-xs pl-6 ${isFirstOrderViolation ? "text-red-600" : "text-green-600"
+                                                                                    }`}
+                                                                            >
+                                                                                <span
+                                                                                    className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold ${isFirstOrderViolation ? "bg-red-500" : "bg-green-500"
+                                                                                        }`}
+                                                                                >
+                                                                                    {isFirstOrderViolation ? "✗" : "✓"}
+                                                                                </span>
+                                                                                <span className="flex-1">
+                                                                                    Valid for first order only
+                                                                                    {isFirstOrderViolation && (
+                                                                                        <span className="text-gray-500 ml-1">
+                                                                                            (You&apos;ve already placed an order)
+                                                                                        </span>
+                                                                                    )}
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* NEW: Max Usage Per User Condition */}
+                                                                        {coupon.maxUsagePerUser && (
+                                                                            <div
+                                                                                className={`flex items-center gap-2 text-[10px] sm:text-xs pl-6 ${isUserLimitReached ? "text-red-600" : "text-green-600"
+                                                                                    }`}
+                                                                            >
+                                                                                <span
+                                                                                    className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold ${isUserLimitReached ? "bg-red-500" : "bg-green-500"
+                                                                                        }`}
+                                                                                >
+                                                                                    {isUserLimitReached ? "✗" : "✓"}
+                                                                                </span>
+                                                                                <span className="flex-1">
+                                                                                    Max {coupon.maxUsagePerUser} {coupon.maxUsagePerUser === 1 ? 'use' : 'uses'} per user
+                                                                                    {/* {!isUserLimitReached && (
+                                                                                                <span className="text-gray-500 ml-1">
+                                                                                                    ({coupon.maxUsagePerUser - (coupon.userUsageCount ?? 0)} remaining)
+                                                                                                </span>
+                                                                                            )} */}
+                                                                                    {isUserLimitReached && (
+                                                                                        <span className="text-gray-500 ml-1">
+                                                                                            (You&apos;ve used this coupon {coupon?.usageCount ?? 0} times)
+                                                                                        </span>
+                                                                                    )}
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* Min Cart Value */}
+                                                                        <div
+                                                                            className={`flex items-center gap-2 text-[10px] sm:text-xs pl-6 ${isMinCartNotMet ? "text-red-600" : "text-green-600"
+                                                                                }`}
+                                                                        >
+                                                                            <span
+                                                                                className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold ${isMinCartNotMet ? "bg-red-500" : "bg-green-500"
+                                                                                    }`}
+                                                                            >
+                                                                                {isMinCartNotMet ? "✗" : "✓"}
+                                                                            </span>
+                                                                            <span className="flex-1">
+                                                                                Min cart value: ₹{coupon.minCartValue}
+                                                                                {isMinCartNotMet && (
+                                                                                    <span className="text-gray-500 ml-1">
+                                                                                        (Add ₹{coupon?.minCartValue && coupon.minCartValue - subtotalBeforeDiscount} more)
+                                                                                    </span>
+                                                                                )}
+                                                                            </span>
+                                                                        </div>
+
+                                                                        {/* Min Order Quantity */}
+                                                                        <div
+                                                                            className={`flex items-center gap-2 text-[10px] sm:text-xs pl-6 ${isMinQuantityNotMet ? "text-red-600" : "text-green-600"
+                                                                                }`}
+                                                                        >
+                                                                            <span
+                                                                                className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold ${isMinQuantityNotMet ? "bg-red-500" : "bg-green-500"
+                                                                                    }`}
+                                                                            >
+                                                                                {isMinQuantityNotMet ? "✗" : "✓"}
+                                                                            </span>
+                                                                            <span className="flex-1">
+                                                                                Min {coupon.minOrderQuantity} items required
+                                                                                {isMinQuantityNotMet && (
+                                                                                    <span className="text-gray-500 ml-1">
+                                                                                        (Add {coupon?.minOrderQuantity && coupon.minOrderQuantity - cart.length} more)
+                                                                                    </span>
+                                                                                )}
+                                                                            </span>
+                                                                        </div>
+
+                                                                        {/* Usage Limit - Will always show available since expired are filtered out */}
+                                                                        <div className="flex items-center gap-2 text-[10px] sm:text-xs pl-6 text-green-600">
+                                                                            <span className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold bg-green-500">
+                                                                                ✓
+                                                                            </span>
+                                                                            <span className="flex-1">
+                                                                                Coupon available
+                                                                                {/* <span className="text-gray-500 ml-1">
+                                                                                            ({coupon.maxUsage - coupon.usageCount} left)
+                                                                                        </span> */}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Terms and Conditions */}
+                                                                    {coupon.termsAndConditions && (
+                                                                        <div className="pt-2 border-t border-gray-200 mt-2">
+                                                                            <div className="flex items-start gap-2">
+                                                                                <div className="flex-1">
+                                                                                    <div className="text-[10px] sm:text-xs font-semibold text-gray-700 mb-1">
+                                                                                        Terms & Conditions:
+                                                                                    </div>
+                                                                                    <div className="text-[10px] sm:text-xs text-gray-600 leading-relaxed">
+                                                                                        {coupon.termsAndConditions}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                ) : (
+                                    <div className="text-center py-4 text-gray-500 text-sm">
+                                        No coupons available
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Cart Summary */}
                     {cart.length > 0 && (
                         <div className="border-t bg-gray-50 p-4 sm:p-6 space-y-3 sm:space-y-4">
@@ -862,22 +1426,39 @@ export default function POSScreen() {
 
                                 {getTotalSavings() > 0 && (
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-green-600">Discount:</span>
+                                        <span className="text-green-600">Product Discount:</span>
                                         <span className="font-medium text-green-600">-₹{getTotalSavings().toFixed(2)}</span>
+                                    </div>
+                                )}
+
+                                {appliedCoupon && couponResponse && (
+                                    <div className="flex justify-between items-center text-sm">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-blue-600">Coupon Discount ({appliedCoupon.couponCode}):</span>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={removeAppliedCoupon}
+                                                className="h-6 px-2 text-xs text-red-500 hover:text-red-700 hover:bg-red-50"
+                                            >
+                                                Remove
+                                            </Button>
+                                        </div>
+                                        <span className="font-medium text-blue-600">-{formatCurrency(couponResponse?.data?.discount ?? 0)}</span>
                                     </div>
                                 )}
 
                                 <div className="border-t pt-2">
                                     <div className="flex justify-between text-base sm:text-lg font-bold">
                                         <span>Total:</span>
-                                        <span className="text-green-600">₹{getFinalTotal().toFixed(2)}</span>
+                                        <span className="text-green-600">{formatCurrency(subtotalAfterDiscountForCart)}</span>
                                     </div>
                                 </div>
 
-                                {getTotalSavings() > 0 && (
+                                {(getTotalSavings() > 0 || getCouponDiscount() > 0) && (
                                     <div className="text-center">
                                         <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
-                                            You saved ₹{getTotalSavings().toFixed(2)}!
+                                            You saved ₹{(getTotalSavings() + getCouponDiscount()).toFixed(2)}!
                                         </Badge>
                                     </div>
                                 )}
@@ -898,7 +1479,10 @@ export default function POSScreen() {
                                 ) : (
                                     <div className="flex items-center gap-2">
                                         <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
-                                        <span className="text-sm sm:text-base">Process Order - ₹{getFinalTotal().toFixed(2)}</span>
+                                        <span className="text-sm sm:text-base">Process Order - ₹ {(
+                                            Number(getFinalTotal().toFixed(2)) -
+                                            Number(couponResponse?.data?.discount ?? 0)
+                                        ).toFixed(2)}</span>
                                     </div>
                                 )}
                             </Button>
@@ -1099,7 +1683,7 @@ export default function POSScreen() {
                                     <div className="space-y-2">
                                         <div className="flex justify-between text-sm">
                                             <span className="text-gray-600">Subtotal:</span>
-                                            <span className="font-medium">₹{getTotalPrice().toFixed(2)}</span>
+                                            <span className="font-medium">₹{getFinalTotal().toFixed(2)}</span>
                                         </div>
 
                                         {getTotalSavings() > 0 && (

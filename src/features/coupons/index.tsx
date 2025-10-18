@@ -50,6 +50,7 @@ export default function Coupons() {
       expiryDate: coupon.expiryDate
         ? new Date(coupon.expiryDate).toLocaleDateString()
         : '-',
+      couponType: coupon.couponType || 'normal',
     }));
   }, [data]);
 

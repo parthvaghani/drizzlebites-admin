@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 const ACCESS_TOKEN = 'thisisjustarandomstring'
 
 interface AuthUser {
+  _id: string
   accountNo: string
   email: string
   role: string[]

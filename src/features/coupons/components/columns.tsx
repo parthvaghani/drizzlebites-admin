@@ -130,6 +130,22 @@ export const columns: ColumnDef<Coupon>[] = [
     },
   },
 
+  {
+    accessorKey: 'couponType',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Coupon Type' className='text-center' />
+    ),
+    cell: ({ row }) => {
+      return (
+        <div className='flex flex-col'>
+          <Badge variant="default" className='capitalize w-fit'>
+            {row.getValue('couponType') === 'pos' ? 'POS' : 'Normal'}
+          </Badge>
+        </div>
+      );
+    },
+  },
+
   // Start Date
   {
     accessorKey: 'startDate',

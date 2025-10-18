@@ -27,6 +27,7 @@ export interface Coupon {
     isActive?: boolean;
     createdAt?: string;
     updatedAt?: string;
+    couponType?: "pos" | "normal";
 }
 
 export interface CreateCoupon {
@@ -49,6 +50,7 @@ export interface CreateCoupon {
     isActive?: boolean;
     createdAt?: string;
     updatedAt?: string;
+    couponType?: "pos" | "normal";
 }
 
 // Pagination interface
@@ -57,6 +59,7 @@ interface GetCouponsParams {
     limit?: number;
     search?: string;
     isActive?: boolean;
+    isPOSOnly?: boolean;
 }
 
 interface PaginatedCouponsResponse {
@@ -66,13 +69,21 @@ interface PaginatedCouponsResponse {
     limit?: number;
 }
 
+export interface ApplyPOSCouponPayload {
+    couponCode: string;
+    userId: string;
+    orderQuantity: number;
+    cartValue: number;
+    level: string;
+}
+
 // ✅ GET all coupons (with pagination / search)
 const getCouponsApi = async (
     params: GetCouponsParams = {}
 ): Promise<PaginatedCouponsResponse> => {
-    const { page, limit, search, isActive } = params;
+    const { page, limit, search, isActive, isPOSOnly = false } = params;
     const response = await api.get('/coupons', {
-        params: { page, limit, search, isActive },
+        params: { page, limit, search, isActive, isPOSOnly },
     });
 
     const payload = response?.data?.data ?? response?.data ?? {};
@@ -88,6 +99,26 @@ const getCouponsApi = async (
         limit: currentLimit,
     };
 };
+
+const getPOSCouponsApi = async (
+): Promise<PaginatedCouponsResponse> => {
+    const response = await api.get('/coupons/pos', {
+    });
+
+    const payload = response?.data?.data ?? response?.data ?? {};
+    const results: Coupon[] = payload?.results ?? payload ?? [];
+    return {
+        results,
+    };
+};
+
+export const applyPOSCoupon =async (
+    payload: ApplyPOSCouponPayload
+): Promise<PaginatedCouponsResponse> => {
+    const response =  await api.post("/coupons/apply", payload);
+    return response.data;
+};
+
 
 // ✅ CREATE coupon
 const createCouponApi = async (data: Partial<CreateCoupon>): Promise<Coupon> => {
@@ -128,15 +159,32 @@ const applyCouponApi = async (data: {
 // ⚡ React Query Hooks
 
 export function useCoupons(params: GetCouponsParams = {}) {
-    const { page = 1, limit = 10, search = '', isActive } = params;
+    const { page = 1, limit = 10, search = '', isActive, isPOSOnly = false } = params;
     return useQuery({
-        queryKey: ['coupons', { page, limit, search, isActive }],
-        queryFn: () => getCouponsApi({ page, limit, search, isActive }),
+        queryKey: ['coupons', { page, limit, search, isActive, isPOSOnly }],
+        queryFn: () => getCouponsApi({ page, limit, search, isActive, isPOSOnly }),
         placeholderData: keepPreviousData,
         staleTime: 1000 * 60 * 5,
         refetchOnWindowFocus: false,
     });
 }
+
+export function usePOSCoupons() {
+    return useQuery({
+        queryKey: ['pos-coupons'],
+        queryFn: () => getPOSCouponsApi(),
+        placeholderData: keepPreviousData,
+        staleTime: 1000 * 60 * 5,
+        refetchOnWindowFocus: false,
+    });
+}
+
+export const useApplyPOSCoupon = () => {
+    return useMutation({
+        mutationFn: (payload: ApplyPOSCouponPayload) => applyPOSCoupon(payload),
+    });
+};
+
 
 export function useCoupon(id: string) {
     return useQuery({
