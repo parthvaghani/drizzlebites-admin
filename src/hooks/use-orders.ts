@@ -67,6 +67,7 @@ export interface GetOrdersParams {
   search?: string;
   status?: string;
   sortBy?: string; // e.g. 'createdAt:desc'
+  posOrder?: boolean;
 }
 
 interface OrdersResponse {
@@ -77,7 +78,7 @@ interface OrdersResponse {
 }
 
 const getOrdersApi = async (params: GetOrdersParams = {}): Promise<OrdersResponse> => {
-  const { page, limit, search, status, sortBy } = params;
+  const { page, limit, search, status, sortBy, posOrder } = params;
   const response = await api.get('/orders/all', {
     params: {
       page,
@@ -85,6 +86,7 @@ const getOrdersApi = async (params: GetOrdersParams = {}): Promise<OrdersRespons
       search,
       status,
       sortBy,
+      posOrder,
     },
   });
 

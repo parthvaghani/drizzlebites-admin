@@ -533,9 +533,9 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">View</Button>
+        <Button variant="outline" size="sm" className="text-xs sm:text-sm">View</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         {isLoadingOrder ? (
           <div className="relative min-h-[200px]">
             <ContentLoader active />
@@ -543,47 +543,47 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
         ) : (
           <>
             <DialogHeader>
-              <div className="flex items-center justify-between">
-                <DialogTitle className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <span>Order Details</span>
-                  <Badge variant={order.paymentStatus === 'paid' ? 'enable' : 'destructive'} className='shadow-xl/15'>
+                  <Badge variant={order.paymentStatus === 'paid' ? 'enable' : 'destructive'} className='shadow-xl/15 text-xs'>
                     {order.paymentStatus}
                   </Badge>
                 </DialogTitle>
                 {fetchedOrder?.invoiceNumber && (
-                  <Button variant="outline" size="sm" onClick={handleDownloadInvoice} disabled={downloadInvoiceMutation.isPending} className="gap-2 mr-2">
-                    <Download className="h-4 w-4" />
+                  <Button variant="outline" size="sm" onClick={handleDownloadInvoice} disabled={downloadInvoiceMutation.isPending} className="gap-2 text-xs sm:text-sm w-full sm:w-auto">
+                    <Download className="h-3 w-3 sm:h-4 sm:w-4" />
                     {downloadInvoiceMutation.isPending ? 'Downloading...' : 'Download Invoice'}
                   </Button>
                 )}
               </div>
             </DialogHeader>
 
-            <div className="space-y-6 text-sm">
+            <div className="space-y-4 sm:space-y-6 text-xs sm:text-sm">
               {/* Order Info Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-base">Order Information</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Order ID</span>
-                      <span className="font-medium truncate max-w-[280px]">{detail?._id}</span>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <div className="space-y-2 sm:space-y-3">
+                  <h3 className="font-semibold text-sm sm:text-base">Order Information</h3>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground text-xs sm:text-sm">Order ID</span>
+                      <span className="font-medium truncate max-w-[150px] sm:max-w-[280px] text-xs sm:text-sm">{detail?._id}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">User</span>
-                      <span className="font-medium truncate max-w-[280px]">{displayName}</span>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground text-xs sm:text-sm">User</span>
+                      <span className="font-medium truncate max-w-[150px] sm:max-w-[280px] text-xs sm:text-sm">{displayName}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Email</span>
-                      <span className="font-medium">{email}</span>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground text-xs sm:text-sm">Email</span>
+                      <span className="font-medium truncate text-xs sm:text-sm">{email}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Phone</span>
-                      <span className="font-medium">{detail?.phoneNumber}</span>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground text-xs sm:text-sm">Phone</span>
+                      <span className="font-medium text-xs sm:text-sm">{detail?.phoneNumber}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Created</span>
-                      <span className="font-medium">
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground text-xs sm:text-sm">Created</span>
+                      <span className="font-medium text-xs sm:text-sm">
                         {detail?.createdAt ? new Date(detail.createdAt).toLocaleString('en-IN') : ''}
                       </span>
                     </div>
@@ -662,9 +662,9 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                 )}
 
                 {/* Shipping Address */}
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-base">Shipping Address</h3>
-                  <div className="rounded-lg border p-4 bg-muted/20 break-words whitespace-pre-wrap">
+                <div className="space-y-2 sm:space-y-3">
+                  <h3 className="font-semibold text-sm sm:text-base">Shipping Address</h3>
+                  <div className="rounded-lg border p-3 sm:p-4 bg-muted/20 break-words whitespace-pre-wrap text-xs sm:text-sm">
                     {detail?.address ? (
                       <>
                         <div>{detail.address.addressLine1},</div>
@@ -687,7 +687,7 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
 
               {/* Items Table */}
               <div>
-                <h3 className="font-semibold text-base mb-4">Items</h3>
+                <h3 className="font-semibold text-sm sm:text-base mb-3 sm:mb-4">Items</h3>
 
                 {/* Desktop Table View */}
                 <div className="hidden lg:block rounded-lg border overflow-hidden">
@@ -718,9 +718,9 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                 {/* Tablet and Mobile views remain similar but should also be extracted to separate components */}
 
                 {/* Order Summary */}
-                <div className="flex justify-end mt-4">
-                  <div className="border rounded-lg p-4 w-full sm:max-w-sm bg-muted/20">
-                    <div className="space-y-2">
+                <div className="flex justify-end mt-3 sm:mt-4">
+                  <div className="border rounded-lg p-3 sm:p-4 w-full sm:max-w-sm bg-muted/20">
+                    <div className="space-y-1.5 sm:space-y-2">
                       <div className="flex justify-between text-sm sm:text-base">
                         <span>Subtotal:</span>
                         <span>{formatINR(orderTotals.subtotal)}</span>
@@ -771,12 +771,12 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
               <Separator />
 
               {/* Order Tracking */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-base">Order Tracking</h3>
-                  <Badge variant={status} className='shadow-xl/15'>{currentStatus}</Badge>
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <h3 className="font-semibold text-sm sm:text-base">Order Tracking</h3>
+                  <Badge variant={status} className='shadow-xl/15 text-xs'>{currentStatus}</Badge>
                 </div>
-                <div className="flex flex-col justify-center items-center bg-muted/20 dark:bg-accent/15 rounded-lg p-6">
+                <div className="flex flex-col justify-center items-center bg-muted/20 dark:bg-accent/15 rounded-lg p-3 sm:p-6">
                   <div className="flex items-start justify-between relative w-full">
                     {filteredSteps.map((step, index) => {
                       const historyEntry = detail.statusHistory?.find(

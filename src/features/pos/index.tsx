@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { LogOut, ShoppingCart, User, ChefHat, Cake, Donut, Cookie, Sandwich, Image as ImageIcon, Wheat, Search, X, Menu, X as XIcon } from 'lucide-react';
+import { LogOut, ShoppingCart, User, ChefHat, Cake, Donut, Cookie, Sandwich, Image as ImageIcon, Wheat, Search, X, Menu, X as XIcon, ClipboardList } from 'lucide-react';
 import { useLogout } from '@/hooks/use-auth';
 import { useNavigate } from '@tanstack/react-router';
 import { AddressModal } from '@/components/address-modal';
@@ -36,7 +36,7 @@ interface Category {
 
 export default function POSScreen() {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-    const [cart, setCart] = useState<Array<{ product: Product; quantity: number; variant?: { weight: string; price: number; }; }>>([]);
+    const [cart, setCart] = useState<Array<{ product: Product; quantity: number; variant?: { weight: string; price: number; discount?: number; }; }>>([]);
     const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
     const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -193,17 +193,50 @@ export default function POSScreen() {
             cart: cart.map(item => {
                 // If item has a variant, we need to determine the weight variant type
                 if (item.variant) {
-                    // Find the selected variant key for this product
-                    const selectedVariantKey = selectedVariants[item.product._id];
-                    if (selectedVariantKey) {
-                        const [type] = selectedVariantKey.split('-');
+                    const product = item.product;
+                    const variantWeight = item.variant.weight;
+
+                    // Try to find which variant type (gm or kg) contains this weight
+                    let type: 'gm' | 'kg' | null = null;
+                    let variantData = null;
+
+                    // Check in gm variants
+                    if (product.variants?.gm) {
+                        variantData = product.variants.gm.find((v: { weight: string }) => v.weight === variantWeight);
+                        if (variantData) {
+                            type = 'gm';
+                        }
+                    }
+
+                    // Check in kg variants if not found in gm
+                    if (!type && product.variants?.kg) {
+                        variantData = product.variants.kg.find((v: { weight: string }) => v.weight === variantWeight);
+                        if (variantData) {
+                            type = 'kg';
+                        }
+                    }
+
+                    // If we found the variant type, return proper payload
+                    if (type && variantData) {
                         return {
                             productId: item.product._id,
-                            weightVariant: type, // 'gm' or 'kg'
-                            weight: item.variant.weight,
+                            weightVariant: type,
+                            weight: variantWeight,
                             totalProduct: item.quantity,
+                            price: variantData?.price || item.variant.price || 0,
+                            discount: variantData?.discount || 0,
                         };
                     }
+
+                    // Fallback: use variant data directly if we couldn't find the type
+                    return {
+                        productId: item.product._id,
+                        weightVariant: 'gm', // default
+                        weight: variantWeight,
+                        totalProduct: item.quantity,
+                        price: item.variant.price || 0,
+                        discount: item.variant.discount || 0,
+                    };
                 }
 
                 // Default fallback for products without variants
@@ -212,8 +245,8 @@ export default function POSScreen() {
                     weightVariant: 'gm',
                     weight: '100',
                     totalProduct: item.quantity,
-                    // discountedPrice: 0,
-                    // originalPrice: 0
+                    price: 0,
+                    discount: 0,
                 };
             }),
             address,
@@ -401,7 +434,7 @@ export default function POSScreen() {
     };
 
     return (
-        <div className="h-screen w-screen bg-gray-50 flex flex-col">
+        <div className="h-screen w-screen bg-gray-50 flex flex-col overflow-y-auto">
             {/* Header */}
             <div className="bg-white shadow-sm border-b px-4 sm:px-6 py-2 flex items-center justify-between">
                 <div className="flex items-center space-x-2 sm:space-x-4">
@@ -446,18 +479,25 @@ export default function POSScreen() {
 
                     {/* Desktop Buttons */}
                     <div className="hidden lg:flex items-center space-x-4">
+                        <Button variant="outline" onClick={() => navigate({ to: '/pos-orders' })}>
+                            <ClipboardList className="w-4 h-4" />
+                            <span className="hidden sm:inline">POS Orders</span>
+                        </Button>
                         <Button variant="outline" onClick={handleBackToAdmin}>
-                            <User className="w-4 h-4 mr-2" />
+                            <User className="w-4 h-4" />
                             <span className="hidden sm:inline">Back to Admin</span>
                         </Button>
                         <Button variant="outline" onClick={handleLogout}>
-                            <LogOut className="w-4 h-4 mr-2" />
+                            <LogOut className="w-4 h-4" />
                             <span className="hidden sm:inline">Logout</span>
                         </Button>
                     </div>
 
                     {/* Mobile Menu Buttons */}
                     <div className="lg:hidden flex items-center space-x-2">
+                        <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/pos-orders' })}>
+                            <ClipboardList className="w-4 h-4" />
+                        </Button>
                         <Button variant="ghost" size="sm" onClick={handleBackToAdmin}>
                             <User className="w-4 h-4" />
                         </Button>
@@ -517,7 +557,7 @@ export default function POSScreen() {
 
             <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
                 {/* Left Side - Categories and Products */}
-                <div className="flex-1 flex flex-col">
+                <div className="flex-1 flex flex-col overflow-y-auto">
                     {/* Search and Categories */}
                     <div className="bg-white border-b p-3 sm:p-4">
                         {/* Categories - Hidden on mobile, shown in mobile menu */}
