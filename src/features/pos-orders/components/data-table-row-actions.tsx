@@ -551,7 +551,7 @@ export function DataTableRowActions({ row }: { row: Row<OrderRow>; }) {
                   </Badge>
                 </DialogTitle>
                 {fetchedOrder?.invoiceNumber && (
-                  <Button variant="outline" size="sm" onClick={handleDownloadInvoice} disabled={downloadInvoiceMutation.isPending} className="gap-2 text-xs sm:text-sm w-full sm:w-auto">
+                  <Button variant="outline" size="sm" onClick={handleDownloadInvoice} disabled={downloadInvoiceMutation.isPending} className="gap-2 mr-2 text-xs sm:text-sm w-full sm:w-auto">
                     <Download className="h-3 w-3 sm:h-4 sm:w-4" />
                     {downloadInvoiceMutation.isPending ? 'Downloading...' : 'Download Invoice'}
                   </Button>

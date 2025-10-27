@@ -28,6 +28,7 @@ export default function Orders() {
         search,
         status,
         sortBy,
+        posOrder: false,
     });
 
     const orders: Order[] = useMemo(() => {

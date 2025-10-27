@@ -153,11 +153,11 @@ const downloadInvoiceApi = async (id: string): Promise<Blob> => {
 };
 
 export function useOrdersList(params: GetOrdersParams) {
-  const { page = 1, limit = 10, search = '', status, sortBy } = params;
+  const { page = 1, limit = 10, search = '', status, sortBy, posOrder } = params;
   const accessToken = useAuthStore((state) => state.auth.accessToken);
   return useQuery({
-    queryKey: ['orders', { page, limit, search, status, sortBy }],
-    queryFn: () => getOrdersApi({ page, limit, search, status, sortBy }),
+    queryKey: ['orders', { page, limit, search, status, sortBy, posOrder }],
+    queryFn: () => getOrdersApi({ page, limit, search, status, sortBy, posOrder }),
     enabled: Boolean(accessToken),
     placeholderData: keepPreviousData,
     staleTime: 1000 * 30,
