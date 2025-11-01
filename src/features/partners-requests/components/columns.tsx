@@ -1,9 +1,9 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
 import { useDeletePartnershipRequest } from '@/hooks/use-partnership-requests';
 import { toast } from 'sonner';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export interface PartnershipRequestRow {
     _id: string;
@@ -47,24 +47,22 @@ export const columns: ColumnDef<PartnershipRequestRow>[] = [
         header: 'Additional Info',
         cell: ({ row }) => {
             const company = row.getValue('company') as string;
-            return <div className="text-sm">{company || '-'}</div>;
-        },
-    },
-    // {
-    //     accessorKey: 'status',
-    //     header: 'Status',
-    //     cell: ({ row }) => {
-    //         const status = row.getValue('status') as string;
-    //         const variant = status === 'approved' ? 'default' : status === 'rejected' ? 'destructive' : 'secondary';
-    //         return <Badge variant={variant}>{status}</Badge>;
-    //     },
-    // },
-    {
-        accessorKey: 'createdAt',
-        header: 'Created At',
-        cell: ({ row }) => {
-            const createdAt = row.getValue('createdAt') as string;
-            return <div className="text-sm">{createdAt ? format(new Date(createdAt), 'MMM dd, yyyy') : '-'}</div>;
+            const maxLength = 600; // reduced length to prevent scroll
+            const truncated = company?.length > maxLength ? `${company.slice(0, maxLength)}...` : company || '—';
+            return (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <span className="truncate block max-w-[900px] text-sm text-muted-foreground cursor-help">{truncated}</span>
+                        </TooltipTrigger>
+                        {company && (
+                            <TooltipContent className="max-w-xs">
+                                <p>{company}</p>
+                            </TooltipContent>
+                        )}
+                    </Tooltip>
+                </TooltipProvider>
+            );
         },
     },
     {

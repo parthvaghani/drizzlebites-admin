@@ -46,6 +46,7 @@ interface Product {
     category?: Category | string;
     name?: string;
     description?: string;
+    product_slug?: string;
     isPremium?: boolean;
     isPopular?: boolean;
     images?: string[];
@@ -264,43 +265,84 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
                 return i >= 0 ? value.slice(i) : value;
             }
         };
+
+        // Helper to normalize image for comparison
+        const normalizeForComparison = (img: unknown): string => {
+            if (typeof img === 'string') return img;
+            if (img && typeof img === 'object') {
+                const v = img as Record<string, unknown>;
+                return String(v.key || v.path || v.url || v.src || '');
+            }
+            return String(img || '');
+        };
+
+        // Check if images have changed by comparing arrays
+        const normalizedOriginal = originalImages.map(normalizeForComparison).sort();
+        const normalizedCurrent = currentImages.map(normalizeForComparison).sort();
+        const imagesChanged =
+            normalizedOriginal.length !== normalizedCurrent.length ||
+            normalizedOriginal.some((img, idx) => img !== normalizedCurrent[idx]) ||
+            newImageFiles.length > 0;
+
+        // Find images to remove by comparing normalized values
+        const normalizedCurrentSet = new Set(normalizedCurrent);
         const imagesToRemove = originalImages
-            .filter((img) => !currentImages.includes(img))
+            .filter((img) => {
+                const normalized = normalizeForComparison(img);
+                return !normalizedCurrentSet.has(normalized);
+            })
             .map((img) => toStorageKey(img))
             .filter((s): s is string => typeof s === 'string' && s.length > 0);
+
         // If new files or images to remove exist, let the hook build FormData
         if (newImageFiles.length > 0 || imagesToRemove.length > 0) {
+            const multipartPayload: {
+                id: string;
+                files: File[];
+                imagesToRemove: string[];
+                category?: string;
+                name: string;
+                description?: string;
+                isPremium: boolean;
+                isPopular: boolean;
+                ingredients: string[];
+                benefits: string[];
+                product_slug: string;
+                variants: {
+                    gm: Array<{ weight: string; price: number; discount: number }>;
+                    kg: Array<{ weight: string; price: number; discount: number }>;
+                };
+            } = {
+                id: String(formData.id || formData._id!),
+                files: newImageFiles,
+                imagesToRemove,
+                // include fields to update alongside images
+                category: isValidObjectId(categoryId) ? categoryId : undefined,
+                name: formData.name || '',
+                description: formData.description || undefined,
+                isPremium: formData.isPremium ?? false,
+                isPopular: formData.isPopular ?? false,
+                ingredients: formData.ingredients || [],
+                benefits: formData.benefits || [],
+                product_slug: formData.name?.toLowerCase().replace(/ /g, '-') || '',
+                variants: {
+                    gm:
+                        formData.variants?.gm?.map(({ weight, price, discount }) => ({
+                            weight,
+                            price,
+                            discount: discount || 0,
+                        })) || [],
+                    kg:
+                        formData.variants?.kg?.map(({ weight, price, discount }) => ({
+                            weight,
+                            price,
+                            discount: discount || 0,
+                        })) || [],
+                },
+            };
+
             updateProduct(
-                {
-                    id: String(formData.id || formData._id!),
-                    files: newImageFiles,
-                    imagesToRemove,
-                    // include fields to update alongside images
-                    category: isValidObjectId(categoryId) ? categoryId : undefined,
-                    name: formData.name || '',
-                    description: formData.description || undefined,
-                    isPremium: formData.isPremium ?? false,
-                    isPopular: formData.isPopular ?? false,
-                    ingredients: formData.ingredients || [],
-                    benefits: formData.benefits || [],
-                    product_slug: formData.name?.toLowerCase().replace(/ /g, '-') || '',
-                    variants: {
-                        gm:
-                            formData.variants?.gm?.map(({ weight, price, discount }) => ({
-                                weight,
-                                price,
-                                discount: discount || 0,
-                            })) || [],
-                        kg:
-                            formData.variants?.kg?.map(({ weight, price, discount }) => ({
-                                weight,
-                                price,
-                                discount: discount || 0,
-                            })) || [],
-                    },
-                    // keep currently retained images to help backend reconcile
-                    images: currentImages,
-                } as unknown as never,
+                multipartPayload as unknown as never,
                 {
                     onSuccess: () => {
                         queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -315,14 +357,28 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
         }
 
         // Otherwise, send JSON payload
-        const payload = {
+        const payload: {
+            id: string;
+            category: string;
+            name: string;
+            description: string;
+            isPremium: boolean;
+            isPopular: boolean;
+            images?: string[];
+            product_slug: string;
+            ingredients: string[];
+            benefits: string[];
+            variants: {
+                gm: Array<{ weight: string; price: number; discount: number }>;
+                kg: Array<{ weight: string; price: number; discount: number }>;
+            };
+        } = {
             id: formData.id || formData._id!,
             category: categoryId,
             name: formData.name || '',
             description: formData.description || '',
             isPremium: formData.isPremium ?? false,
             isPopular: formData.isPopular ?? false,
-            images: formData.images || [],
             product_slug: formData.name?.toLowerCase().replace(/ /g, '-') || '',
             ingredients: formData.ingredients || [],
             benefits: formData.benefits || [],
@@ -341,6 +397,11 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
                     })) || [],
             },
         };
+
+        // Only include images if they have changed
+        if (imagesChanged) {
+            payload.images = formData.images || [];
+        }
 
         updateProduct(payload as unknown as never, {
             onSuccess: () => {
@@ -913,6 +974,16 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
                                     : product.category?.name}
                             </p>
                         </div>
+
+                        {/* Product Slug */}
+                        {product.product_slug && (
+                            <div>
+                                <h3 className='font-medium text-gray-800'>Product Slug</h3>
+                                <p className='mt-1 rounded-md border p-2 text-sm font-mono'>
+                                    {product.product_slug}
+                                </p>
+                            </div>
+                        )}
 
                         {/* Images */}
                         {product.images && product.images.length > 0 && (

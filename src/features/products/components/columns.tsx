@@ -38,16 +38,16 @@ export const columns: ColumnDef<Product>[] = [
   // },
 
   // ✅ Product Name
-  {
-    accessorKey: 'product_slug',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Product Slug" className='text-center' />,
-    cell: ({ row }) => {
-      const product_slug = row.getValue('product_slug') as string;
-      return <span className="font-medium">{product_slug}</span>;
-    },
-    enableSorting: false,
-    enableHiding: false,
-  },
+  // {
+  //   accessorKey: 'product_slug',
+  //   header: ({ column }) => <DataTableColumnHeader column={column} title="Product Slug" className='text-center' />,
+  //   cell: ({ row }) => {
+  //     const product_slug = row.getValue('product_slug') as string;
+  //     return <span className="font-medium">{product_slug}</span>;
+  //   },
+  //   enableSorting: false,
+  //   enableHiding: false,
+  // },
   {
     accessorKey: 'name',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Name" className='text-center' />,

@@ -166,15 +166,15 @@ const updateProductApi = async (
   if (shouldUseMultipart) {
     const formData = new FormData()
 
-    // Files: append under field name 'images'
-    if (Array.isArray(jsonPayload.files)) {
+    // Files: append under field name 'images' (ONLY new File objects, not existing image strings)
+    if (Array.isArray(jsonPayload.files) && jsonPayload.files.length > 0) {
       for (const file of jsonPayload.files) {
         formData.append('images', file as Blob)
       }
     }
 
     // Images to remove: append as repeated 'imagesToRemove[]'
-    if (Array.isArray(jsonPayload.imagesToRemove)) {
+    if (Array.isArray(jsonPayload.imagesToRemove) && jsonPayload.imagesToRemove.length > 0) {
       for (const key of jsonPayload.imagesToRemove) {
         formData.append('imagesToRemove[]', key)
       }
@@ -212,17 +212,32 @@ const updateProductApi = async (
   }
 
   // Case 3: Regular JSON update
-  const updatedPayload = {
+  const updatedPayload: {
+    category?: string
+    name?: string
+    description?: string
+    isPremium?: boolean
+    isPopular?: boolean
+    variants?: Variants
+    images?: string[]
+    ingredients?: string[]
+    benefits?: string[]
+    product_slug?: string
+  } = {
     category: jsonPayload.category,
     name: jsonPayload.name,
     description: jsonPayload.description,
     isPremium: jsonPayload.isPremium,
     isPopular: jsonPayload.isPopular,
     variants: jsonPayload.variants,
-    images: jsonPayload.images || [],
     ingredients: jsonPayload.ingredients || [],
     benefits: jsonPayload.benefits || [],
     product_slug: jsonPayload.product_slug,
+  }
+
+  // Only include images if provided (when images have changed)
+  if (jsonPayload.images !== undefined) {
+    updatedPayload.images = jsonPayload.images
   }
 
   const response = await api.put(`/products/product/${jsonPayload.id}`, updatedPayload)
