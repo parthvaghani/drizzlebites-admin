@@ -38,7 +38,7 @@ export const sidebarData: SidebarData = {
     {
       name: 'Admin',
       logo: '/images/logo.png',
-      plan: 'Drizzle Bites',
+      plan: 'DrizzleBites',
     },
     // {
     //   name: 'Acme Inc',
