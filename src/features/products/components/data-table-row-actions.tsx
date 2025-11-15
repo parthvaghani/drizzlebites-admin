@@ -1027,7 +1027,7 @@ export function DataTableRowActions({ row }: { row: { original: Product; }; }) {
                                     {product.benefits.map((ben, i) => (
                                         <span
                                             key={i}
-                                            className='rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs text-green-700'
+                                            className='rounded-full border border-primary bg-primary-light px-3 py-1 text-xs text-primary-dark font-bold'
                                         >
                                             {ben}
                                         </span>

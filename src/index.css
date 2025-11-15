@@ -13,7 +13,7 @@
   --popover-foreground: var(--primary-dark);
   --primary: #8A4B23; /* DEFAULT - Primary Brown */
   --primary-foreground: #ffffff; /* light text on brown */
-  --primary-light: #b86b3087; /* Nut Shell Brown */
+  --primary-light: #d7ac8b; /* Nut Shell Brown */
   --primary-dark: #6B3819; /* Darker brown for hover states */
   --secondary: oklch(0.968 0.007 247.896);
   --secondary-foreground: oklch(0.208 0.042 265.755);

@@ -106,7 +106,7 @@ export function DataTableRowActions({ row }: { row: { original: Category } }) {
       </Button>
 
       <Button variant="ghost" size="icon" onClick={() => setDetailsOpen(true)} className="h-8 w-8">
-        <Eye className="h-4 w-4 text-gray-700" />
+        <Eye className="h-4 w-4" />
       </Button>
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>

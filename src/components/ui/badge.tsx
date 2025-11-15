@@ -23,7 +23,7 @@ const badgeVariants = cva(
         reviewed:
           'border-primary bg-primary text-primary-foreground',
         placed:
-          'border-primary-dark bg-primary-dark text-primary-light',
+          'border-primary-dark bg-primary-dark text-primary-foreground',
         accepted:
           'border-primary bg-primary text-primary-foreground',
         inprogress:

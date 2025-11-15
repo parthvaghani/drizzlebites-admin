@@ -55,7 +55,7 @@ export function DateRangePicker({
                     className='data-[empty=true]:text-muted-foreground w-[300px] justify-start text-left font-normal'
                 >
                     {label}
-                    <CalendarIcon className='ml-auto h-4 w-4 opacity-50' />
+                    <CalendarIcon className='ml-auto h-4 w-4 text-muted-foreground hover:text-white' />
                 </Button>
             </PopoverTrigger>
             <PopoverContent className='w-auto p-0'>
@@ -95,7 +95,8 @@ export function DateRangePicker({
                 {showPresets && (
                     <div className='border-t p-2 grid grid-cols-2 gap-2'>
                         <Button
-                            variant='ghost'
+                            variant='outline'
+                            className='border-none shadow-none'
                             size='sm'
                             onClick={() => {
                                 const today = new Date();
@@ -105,7 +106,8 @@ export function DateRangePicker({
                             Today
                         </Button>
                         <Button
-                            variant='ghost'
+                            variant='outline'
+                            className='border-none shadow-none'
                             size='sm'
                             onClick={() => {
                                 const to = endOfDay(new Date());
@@ -116,7 +118,8 @@ export function DateRangePicker({
                             Last 7 days
                         </Button>
                         <Button
-                            variant='ghost'
+                            variant='outline'
+                            className='border-none shadow-none'
                             size='sm'
                             onClick={() => {
                                 const to = endOfDay(new Date());
@@ -127,7 +130,8 @@ export function DateRangePicker({
                             Last 30 days
                         </Button>
                         <Button
-                            variant='ghost'
+                            variant='outline'
+                            className='border-none shadow-none'
                             size='sm'
                             onClick={() => {
                                 const now = new Date();
@@ -137,7 +141,8 @@ export function DateRangePicker({
                             This month
                         </Button>
                         <Button
-                            variant='ghost'
+                            variant='outline'
+                            className='border-none shadow-none'
                             size='sm'
                             onClick={() => {
                                 const now = new Date();
@@ -148,7 +153,8 @@ export function DateRangePicker({
                             Last month
                         </Button>
                         <Button
-                            variant='ghost'
+                            variant='outline'
+                            className='border-none shadow-none'
                             size='sm'
                             onClick={() => {
                                 const now = new Date();
