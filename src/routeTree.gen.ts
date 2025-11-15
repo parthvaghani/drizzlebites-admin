@@ -257,6 +257,7 @@ export interface FileRoutesByFullPath {
   '/pos': typeof PosRoute
   '/pos-orders': typeof PosOrdersRoute
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
+  '/clerk/': typeof ClerkauthRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
   '/otp': typeof authOtpRoute
   '/reset-password': typeof authResetPasswordRoute
@@ -290,9 +291,9 @@ export interface FileRoutesByFullPath {
   '/whatsapp-leads': typeof AuthenticatedWhatsappLeadsIndexRoute
 }
 export interface FileRoutesByTo {
-  '/clerk': typeof ClerkAuthenticatedRouteRouteWithChildren
   '/pos': typeof PosRoute
   '/pos-orders': typeof PosOrdersRoute
+  '/clerk': typeof ClerkAuthenticatedRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
   '/otp': typeof authOtpRoute
   '/reset-password': typeof authResetPasswordRoute
@@ -373,6 +374,7 @@ export interface FileRouteTypes {
     | '/pos'
     | '/pos-orders'
     | '/settings'
+    | '/clerk/'
     | '/forgot-password'
     | '/otp'
     | '/reset-password'
@@ -406,9 +408,9 @@ export interface FileRouteTypes {
     | '/whatsapp-leads'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/clerk'
     | '/pos'
     | '/pos-orders'
+    | '/clerk'
     | '/forgot-password'
     | '/otp'
     | '/reset-password'
@@ -629,8 +631,8 @@ declare module '@tanstack/react-router' {
     }
     '/clerk/(auth)': {
       id: '/clerk/(auth)'
-      path: ''
-      fullPath: '/clerk'
+      path: '/'
+      fullPath: '/clerk/'
       preLoaderRoute: typeof ClerkauthRouteRouteImport
       parentRoute: typeof ClerkRouteRoute
     }

@@ -19,7 +19,7 @@
 //           >
 //             <path d='M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3' />
 //           </svg>
-//           DrizzleBites Admin
+//           Vinayak Naturals Admin
 //         </div>
 
 //         <img
@@ -27,7 +27,7 @@
 //           className='relative m-auto'
 //           width={301}
 //           height={60}
-//           alt='DrizzleBites Admin'
+//           alt='Vinayak Naturals Admin'
 //         />
 
 //         <div className='relative z-20 mt-auto'>

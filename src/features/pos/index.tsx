@@ -416,7 +416,7 @@ export default function POSScreen() {
                                         }));
                                     }}
                                 >
-                                    <SelectTrigger className="w-full h-8 text-xs border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md">
+                                    <SelectTrigger className="w-full h-8 text-xs border-gray-300 focus:primary focus:ring-primary rounded-md">
                                         <SelectValue placeholder="Select variant" />
                                     </SelectTrigger>
                                     <SelectContent className="max-w-xs z-50">
@@ -424,7 +424,7 @@ export default function POSScreen() {
                                             <SelectItem
                                                 key={`gm-${_index}`}
                                                 value={`gm-${_index}`}
-                                                className="text-xs cursor-pointer hover:bg-green-50 focus:bg-green-50"
+                                                className="text-xs cursor-pointer hover:bg-gray-100 focus:bg-gray-100 hover:text-gray-800 focus:text-gray-800"
                                             >
                                                 <div className="flex items-center justify-between w-full min-w-0">
                                                     <span className="truncate font-medium">{variant.weight}gm</span>
@@ -477,7 +477,7 @@ export default function POSScreen() {
                                         }
                                     }
                                 }}
-                                className="w-full h-8 text-xs font-medium bg-green-600 hover:bg-green-700 text-white transition-colors duration-200 rounded-md"
+                                className="w-full h-8 text-xs font-medium bg-primary hover:bg-primary-dark text-white transition-colors duration-200 rounded-md"
                                 disabled={false}
                             >
                                 Add to Cart
@@ -487,7 +487,7 @@ export default function POSScreen() {
                         <Button
                             size="sm"
                             onClick={() => addToCart(product)}
-                            className="w-full h-8 text-xs font-medium bg-green-600 hover:bg-green-700 text-white transition-colors duration-200 rounded-md"
+                            className="w-full h-8 text-xs font-medium bg-primary hover:bg-primary-dark text-white transition-colors duration-200 rounded-md"
                         >
                             Add to Cart
                         </Button>
@@ -633,11 +633,11 @@ export default function POSScreen() {
 
                         if (error) {
                             const message = error && typeof error === 'object' && 'response' in error &&
-                        error.response && typeof error.response === 'object' && 'data' in error.response &&
-                        error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data
-                        ? (error.response.data.message as string)
-                        : "Coupon no longer valid for current cart";
-                    toast.error(message);
+                                error.response && typeof error.response === 'object' && 'data' in error.response &&
+                                error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data
+                                ? (error.response.data.message as string)
+                                : "Coupon no longer valid for current cart";
+                            toast.error(message);
                         }
                     }
                 }
@@ -690,12 +690,12 @@ export default function POSScreen() {
                     <div className="items-center justify-center">
                         <img
                             src="/images/logo.png"
-                            alt="DrizzleBites Logo"
+                            alt="Vinayak Naturals Logo"
                             className="w-8 h-8 sm:w-12 sm:h-12 object-contain"
                         />
                     </div>
                     <div>
-                        <h1 className="text-lg sm:text-2xl font-bold text-gray-900">DrizzleBites POS</h1>
+                        <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Vinayak Naturals POS</h1>
                     </div>
                 </div>
 
@@ -909,11 +909,11 @@ export default function POSScreen() {
                 {/* Right Side - Enhanced Cart */}
                 <div className={`w-full lg:w-96 bg-white border-l flex flex-col shadow-lg ${isCartOpen ? 'fixed inset-0 z-50 lg:relative lg:z-auto' : 'hidden lg:flex'}`}>
                     {/* Cart Header */}
-                    <div className="p-4 sm:p-6 border-b bg-gradient-to-r from-green-50 to-blue-50">
+                    <div className="p-4 sm:p-6 border-b bg-gradient-to-r from-primary-foregrounds to-primary-light/50">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3">
-                                <div className="p-2 bg-green-100 rounded-lg">
-                                    <ShoppingCart className="w-5 h-5 text-green-600" />
+                                <div className="p-2 bg-primary-light rounded-lg">
+                                    <ShoppingCart className="w-5 h-5 text-primary" />
                                 </div>
                                 <div>
                                     <h2 className="text-lg font-bold text-gray-900">Cart</h2>
@@ -1466,7 +1466,7 @@ export default function POSScreen() {
 
                             {/* Process Order Button */}
                             <Button
-                                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 sm:py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                                className="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-2 sm:py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
                                 size="lg"
                                 onClick={handleProcessOrder}
                                 disabled={isCreatingOrder}

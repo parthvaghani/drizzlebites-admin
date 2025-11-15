@@ -366,7 +366,7 @@ export default function Dashboard() {
           </div>
           <Button
             onClick={() => navigate({ to: '/pos' })}
-            className="bg-green-600 hover:bg-green-700 text-white"
+            className="bg-primary hover:bg-primary-dark text-white"
           >
             <Monitor className="w-4 h-4 mr-2" />
             Open POS

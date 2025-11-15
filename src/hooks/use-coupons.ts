@@ -102,7 +102,8 @@ const getCouponsApi = async (
 
 const getPOSCouponsApi = async (
 ): Promise<PaginatedCouponsResponse> => {
-    const response = await api.get('/coupons/pos', {
+    const response = await api.get('/coupons', {
+        params: { isPOSOnly: true },
     });
 
     const payload = response?.data?.data ?? response?.data ?? {};

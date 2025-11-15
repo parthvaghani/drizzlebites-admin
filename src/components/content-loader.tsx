@@ -30,7 +30,7 @@ export function ContentLoader({ active, className }: ContentLoaderProps) {
                     alt="Logo"
                     className="h-18 w-18 object-contain animate-bounce"
                 />
-                <div className="text-2xl font-bold text-[#257112]">DrizzleBites</div>
+                <div className="text-2xl font-bold text-[#257112]">Vinayak Naturals</div>
             </div>
         </div>
     );
